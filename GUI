@@ -1,0 +1,162 @@
+from tkinter import *
+
+dev_one = {'id' : 1, 'username' : "Dog", 'password' : "cat", 'name' : "Jack Super", 
+            'grade' : 3.5, 'projects' : 30, "image" : "Dev.png", "team" : "N/A"}
+dev_two = {"id" : 2, "username" : "Cat", "password" : "cat", "name" : "Timmy Tick", 
+            "grade" : 2.51, "projects" : 21, "image" : "Dev.png", "team" : "Killers"}
+dev_three = {"id" : 3, "username" : "Boot", "password" : "cat","name" : "Tacks Freedy", 
+             "grade" : 3.213, "projects" : 10, "image" : "Dev.png","team" : "Yolo"}
+devs = [dev_one, dev_two, dev_three]
+
+client_one = {'id' : 4, 'username' : "Hello", 'password' : "cat", 'name' : "Jody Nice", 
+            'grade' : 3.1, 'projects' : 1, "image" : "Client.png", "team" : "Wall Street"}
+client_two = {"id" : 5, "username" : "Nope", "password" : "cat", "name" : "Cosmo Wanda", 
+            "grade" : 1.99, "projects" : 3, "image" : "Client.png", "team" : "Make it Rain"}
+client_three = {"id" : 6, "username" : "Miami", "password" : "cat","name" : "Freaddy Fasbear", 
+             "grade" : 4, "projects" : 110, "image" : "Client.png","team" : "N/A"}
+clients = [client_one, client_two, client_three]
+
+users = [dev_one, dev_two, dev_three, client_one, client_two, client_three]
+
+team_one = {'id' : 1101,'name' : "WallStreet", 'grade' : 3.5111, 'projects' : 30, "image" : "T.jpg", "team" : 10 }
+team_two = {"id" : 3341, "name" : "Yolo", "grade" : 1.99, "projects" : 21, "image" : "T.jpg", "team" : 3}
+team_three = {"id" : 4421, "name" : "Jenks", "grade" : 4, "projects" : 110, "image" : "T.jpg","team" : 32}
+teams = [team_one, team_two, team_three]
+software_statistic = [170, 85, 85, 55, 2.88, 623]
+
+class GUI():
+
+    def __init__(self):
+        self.origin = Tk()
+        
+        #Set up the general screen
+        self.origin.title("The Turk System")
+        self.frame_main_chart = Frame(self.origin, bg = "white")
+        self.frame_over_lay = Frame(self.origin, bg = "#3b0c0c")
+        
+        #Items form overlay that will need to be called back
+        self.frame_user = Frame(self.frame_over_lay, bg = "#3b0c0c")
+        self.entry_username = Entry(self.frame_user)
+        self.entry_password = Entry(self.frame_user)
+    
+        #Creates all the items 
+        self.set_up_top_user_chart()
+        self.set_up_software_stats()
+        self.set_up_overlay()
+        
+        #Puts the iteams on screen
+        self.frame_over_lay.grid(row = 0, column = 0, sticky = S+W+N+E)
+        self.frame_main_chart.grid(row = 1, column = 0, sticky = S+W+N+E)
+        
+    
+    
+    def set_up_overlay(self):
+        color = "#3b0c0c"
+        button_TTS = Button(self.frame_over_lay, text = "The Turk System", relief = FLAT, bg = color, fg = "white", cursor = "hand2")  
+        entry_search_bar = Entry(self.frame_over_lay)
+        button_search = Button(self.frame_over_lay, text = "Search", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
+        label_username = Label(self.frame_user, text = "Username: ",bg = color, fg = "white")
+        label_password = Label(self.frame_user, text = "Password: ",bg = color, fg = "white")
+        button_log_in = Button(self.frame_user, text = "Login", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
+        button_recover_account = Button(self.frame_user, text = "Recover Account", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
+    
+        button_TTS.grid(row = 0, column = 0, sticky = W) 
+        entry_search_bar.grid(row = 0, column = 1, padx = 10) 
+        button_search.grid(row = 0, column = 2, sticky = E)
+        self.frame_user.grid(row = 0, column = 3)
+        label_username.grid(row = 0, column = 0)
+        self.entry_username.grid(row = 0, column = 1)
+        label_password.grid(row = 0, column = 2)
+        self.entry_password.grid(row = 0, column = 3)
+        button_log_in.grid(row = 0, column = 4,padx = 10)
+        button_recover_account.grid(row = 0, column = 5,padx = 10)
+
+    def set_up_top_user_chart(self):
+        label_hall = Label(self.frame_main_chart, text = "Hall of Fame", bg = "white")
+    
+        column_counter = 0
+        counter = 2
+        for team in teams:
+            self.top_user_profile(row = counter, column = column_counter, dev =  team)
+            counter += 1
+        label_top_team = Label(self.frame_main_chart, text = "Top 3 Teams", bg = "white")
+
+        column_counter += 1
+        counter = 2
+        for dev in devs:
+            self.top_user_profile(row = counter, column = column_counter, dev =  dev)
+            counter += 1
+        
+        column_counter += 1
+        label_top_dev = Label(self.frame_main_chart, text = "Top 3 Developers", bg = "white")
+        counter = 2 
+        
+        for client in clients:
+            self.top_user_profile(row = counter, column = column_counter, dev = client)
+            counter += 1
+        label_top_client = Label(self.frame_main_chart, text = "Top 3 Investors", bg = "white")
+    
+        label_hall.grid(row = 0, column = 0, columnspan = 3, sticky = E+W)
+        label_top_team.grid(row = 1, column = 0, sticky = W+E)
+        label_top_dev.grid(row = 1, column = 1, sticky = W+E)
+        label_top_client.grid(row = 1, column = 2, sticky = W+E)
+
+    def set_up_software_stats(self):
+        color = "#C3CBDE"
+        frame_temp = Frame(self.frame_main_chart, bg = color)
+        label_stats_title = Label(frame_temp, text = "The Turk System Statistics", bg = color, anchor = NE)
+        label_user_total =  Label(frame_temp, text = "Total Users: " + str(software_statistic[0]), bg = color)
+        label_user_devs =  Label(frame_temp, text = "Total Developers: " + str(software_statistic[1]), bg = color)
+        label_user_clients =  Label(frame_temp, text = "Total Clients: " + str(software_statistic[2]), bg = color)
+        label_user_teams =  Label(frame_temp, text = "Total Teams: " + str(software_statistic[3]), bg = color)
+        label_avg_grade =  Label(frame_temp, text = "Average Grade: " + str(software_statistic[4]), bg = color)
+        label_projects_completed =  Label(frame_temp, text = "Projects Completed: " + str(software_statistic[5]), bg = color)
+    
+        frame_temp.grid(row = 0, column = 4, rowspan = 8, sticky = E+S+N+W)
+        label_stats_title.grid(row = 0, column = 0, sticky = E+W, ipady = 20)
+        label_user_total.grid(row = 1, column = 0, sticky = W)
+        label_user_devs.grid(row = 2, column = 0, sticky = W)
+        label_user_clients.grid(row = 3, column = 0, sticky = W)
+        label_user_teams.grid(row = 4, column = 0, sticky = W)
+        label_avg_grade.grid(row = 5, column = 0, sticky = W)
+        label_projects_completed.grid(row = 6, column = 0, sticky = W)
+    
+    def top_user_profile(self,row,column, dev):
+        color = "#3b0c0c"
+        frame_temp = Frame(self.frame_main_chart, bg = color)
+        image = PhotoImage(file = "Dev.png")
+        image = image.subsample(5,5)
+        lable_image = Label(frame_temp, image = image, cursor = "hand2")
+        rank = "Rank " + str(row-1) 
+        if (row-1) == 1:
+            rank += "st"
+        elif (row-1) == 2:
+            rank += "nd"
+        else:
+            rank += "rd"
+        label_rank = Label(frame_temp, text = rank, bg = color, fg = "white")
+        label_name = Label(frame_temp, text = "Name: " + dev["name"], bg = color, fg = "white")
+        grade = "Grade: " + str(dev["grade"])
+        label_grade = Label(frame_temp, text = grade, bg = color, fg = "white")
+        if column  == 0:
+            team = "Team members " + str(dev['team'])
+        else:
+            team = "Team: " + str(dev['team'])
+        label_teams = Label(frame_temp, text = team, bg = color, fg = "white")
+        projects = "Projects Complete: " + str(dev["projects"])
+        label_projects = Label(frame_temp, text = projects, bg = color, fg = "white")
+    
+    
+        frame_temp.grid(row = row, column = column, sticky = N+S+E+W, padx = 10, pady = 10)
+        label_rank.grid(row = 2, column = 2)
+        lable_image.grid(row = 2, column = 0, sticky = N+S+W)
+        label_name.grid(row = 3, column =0, sticky = W)
+        label_grade.grid(row = 4, column = 0, sticky = W)
+        label_teams.grid(row = 5, column = 0, sticky = W)
+        label_projects.grid(row = 6, column = 0, sticky = W)
+    
+             
+    
+    
+start = GUI()
+start.origin.mainloop()
