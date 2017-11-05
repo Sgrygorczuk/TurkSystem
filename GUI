@@ -1,26 +1,27 @@
 from tkinter import *
 
-dev_one = {'id' : 1, 'username' : "Dog", 'password' : "cat", 'name' : "Jack Super", 
-            'grade' : 3.5, 'projects' : 30, "image" : "Dev.png", "team" : "N/A"}
-dev_two = {"id" : 2, "username" : "Cat", "password" : "cat", "name" : "Timmy Tick", 
+dev_one = {'id' : 1, 'username' : "Dog", 'password' : "cat", 'name' : "Jack Super",
+            'grade' : 3.5, 'projects' : 30, "image" : "Dev.png", "team" : "N/A", "bio" : "Friednly Neighbroohod Coderman",
+            "bank" : 1441, "warning" : 0}
+dev_two = {"id" : 2, "username" : "Cat", "password" : "cat", "name" : "Timmy Tick",
             "grade" : 2.51, "projects" : 21, "image" : "Dev.png", "team" : "Killers"}
-dev_three = {"id" : 3, "username" : "Boot", "password" : "cat","name" : "Tacks Freedy", 
+dev_three = {"id" : 3, "username" : "Boot", "password" : "cat","name" : "Tacks Freedy",
              "grade" : 3.213, "projects" : 10, "image" : "Dev.png","team" : "Yolo"}
 devs = [dev_one, dev_two, dev_three]
 
-client_one = {'id' : 4, 'username' : "Hello", 'password' : "cat", 'name' : "Jody Nice", 
+client_one = {'id' : 4, 'username' : "Hello", 'password' : "cat", 'name' : "Jody Nice",
             'grade' : 3.1, 'projects' : 1, "image" : "Client.png", "team" : "Wall Street"}
-client_two = {"id" : 5, "username" : "Nope", "password" : "cat", "name" : "Cosmo Wanda", 
+client_two = {"id" : 5, "username" : "Nope", "password" : "cat", "name" : "Cosmo Wanda",
             "grade" : 1.99, "projects" : 3, "image" : "Client.png", "team" : "Make it Rain"}
-client_three = {"id" : 6, "username" : "Miami", "password" : "cat","name" : "Freaddy Fasbear", 
+client_three = {"id" : 6, "username" : "Miami", "password" : "cat","name" : "Freaddy Fasbear",
              "grade" : 4, "projects" : 110, "image" : "Client.png","team" : "N/A"}
 clients = [client_one, client_two, client_three]
 
 users = [dev_one, dev_two, dev_three, client_one, client_two, client_three]
 
-team_one = {'id' : 1101,'name' : "WallStreet", 'grade' : 3.5111, 'projects' : 30, "image" : "T.jpg", "team" : 10 }
-team_two = {"id" : 3341, "name" : "Yolo", "grade" : 1.99, "projects" : 21, "image" : "T.jpg", "team" : 3}
-team_three = {"id" : 4421, "name" : "Jenks", "grade" : 4, "projects" : 110, "image" : "T.jpg","team" : 32}
+team_one = {'id' : 1101,'name' : "WallStreet", 'grade' : 3.5111, 'projects' : 30, "image" : "Dev.png", "team" : 10 }
+team_two = {"id" : 3341, "name" : "Yolo", "grade" : 1.99, "projects" : 21, "image" : "Dev.png", "team" : 3}
+team_three = {"id" : 4421, "name" : "Jenks", "grade" : 4, "projects" : 110, "image" : "Dev.png","team" : 32}
 teams = [team_one, team_two, team_three]
 software_statistic = [170, 85, 85, 55, 2.88, 623]
 
@@ -33,23 +34,40 @@ class GUI():
         self.origin.title("The Turk System")
         self.frame_main_chart = Frame(self.origin, bg = "white")
         self.frame_over_lay = Frame(self.origin, bg = "#3b0c0c")
+        self.frame_current = Frame(self.origin)
+        self.frame_profile = Frame(self.origin)
         
         #Items form overlay that will need to be called back
         self.frame_user = Frame(self.frame_over_lay, bg = "#3b0c0c")
         self.entry_username = Entry(self.frame_user)
         self.entry_password = Entry(self.frame_user)
     
-        #Creates all the items 
+        self.frame_logged_in = Frame(self.frame_over_lay, bg = "#3b0c0c", cursor = "hand2")
+        self.logged_in_id = 0
+        self.profile_id = 1
+        
+        #Creates all the items
         self.set_up_top_user_chart()
         self.set_up_software_stats()
         self.set_up_overlay()
         
+        self.frame_current = self.frame_main_chart
+        
         #Puts the iteams on screen
         self.frame_over_lay.grid(row = 0, column = 0, sticky = S+W+N+E)
-        self.frame_main_chart.grid(row = 1, column = 0, sticky = S+W+N+E)
+        self.frame_current.grid(row = 1, column = 0, sticky = S+W+N+E)
         
-    
-    
+        #Itema for profile
+        self.button_dispute = Button(self.frame_profile, text = "Dispute")
+        self.button_deposit = Button(self.frame_profile, text = "Deposit: ")
+        self.button_withdraw = Button(self.frame_profile, text = "Withdraw")
+        self.button_edit = Button(self.frame_profile, text = "Edit")
+        self.profile_name_entry = Entry(self.frame_profile)
+        self.proflie_bio_entry = Entry(self.frame_profile)
+        self.profile_username_entry = Entry(self.frame_profile)
+        self.profile_password_entry = Entry(self.frame_profile)
+        self.profile_cash_amount = Entry(self.frame_profile)
+        
     def set_up_overlay(self):
         color = "#3b0c0c"
         button_TTS = Button(self.frame_over_lay, text = "The Turk System", relief = FLAT, bg = color, fg = "white", cursor = "hand2")  
@@ -59,9 +77,12 @@ class GUI():
         label_password = Label(self.frame_user, text = "Password: ",bg = color, fg = "white")
         button_log_in = Button(self.frame_user, text = "Login", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
         button_recover_account = Button(self.frame_user, text = "Recover Account", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
+        
+        button_TTS.bind("<Button-1>", self.home_button)
+        button_log_in.bind("<Button-1>", self.log_in)
     
-        button_TTS.grid(row = 0, column = 0, sticky = W) 
-        entry_search_bar.grid(row = 0, column = 1, padx = 10) 
+        button_TTS.grid(row = 0, column = 0, sticky = W)
+        entry_search_bar.grid(row = 0, column = 1, padx = 10)
         button_search.grid(row = 0, column = 2, sticky = E)
         self.frame_user.grid(row = 0, column = 3)
         label_username.grid(row = 0, column = 0)
@@ -89,18 +110,40 @@ class GUI():
         
         column_counter += 1
         label_top_dev = Label(self.frame_main_chart, text = "Top 3 Developers", bg = "white")
-        counter = 2 
+        counter = 2
         
         for client in clients:
             self.top_user_profile(row = counter, column = column_counter, dev = client)
             counter += 1
         label_top_client = Label(self.frame_main_chart, text = "Top 3 Investors", bg = "white")
     
-        label_hall.grid(row = 0, column = 0, columnspan = 3, sticky = E+W)
+        label_hall.grid(row = 0, column = 0, columnspan = 3, sticky = E+W+S+N)
         label_top_team.grid(row = 1, column = 0, sticky = W+E)
         label_top_dev.grid(row = 1, column = 1, sticky = W+E)
         label_top_client.grid(row = 1, column = 2, sticky = W+E)
-
+        
+    def set_up_user(self, user):
+        color = "#3b0c0c"
+        image = PhotoImage(file = user["image"])
+        image = image.subsample(12,12)
+        label_image = Label(self.frame_logged_in, image = image, cursor = "hand2")
+        label_image.image = image
+        label_name = Label(self.frame_logged_in, text = user['name'], bg = color, fg = "white", cursor = "hand2")
+        label_grade = Label(self.frame_logged_in, text = user['grade'], bg = color, fg = "white", cursor = "hand2")
+        button_logout = Button(self.frame_logged_in, text = "Log Out", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
+        
+        button_logout.bind("<Button-1>", self.log_out)
+        self.frame_logged_in.bind("<Button-1>", self.profile_button)
+        label_name.bind("<Button-1>", self.profile_button)
+        label_grade.bind("<Button-1>", self.profile_button)
+        label_image.bind("<Button-1>", self.profile_button)
+        
+        self.frame_logged_in.grid(row = 0, column = 3)
+        label_image.grid(row = 0, column = 0)
+        label_name.grid(row = 0, column = 1)
+        label_grade.grid(row = 0, column = 2)
+        button_logout.grid(row = 0, column = 3)
+        
     def set_up_software_stats(self):
         color = "#C3CBDE"
         frame_temp = Frame(self.frame_main_chart, bg = color)
@@ -121,13 +164,65 @@ class GUI():
         label_avg_grade.grid(row = 5, column = 0, sticky = W)
         label_projects_completed.grid(row = 6, column = 0, sticky = W)
     
+    def set_up_profile(self):
+        
+        #image = PhotoImage(self.frame_profile, file = "Dev.png", width = 50, height = 50)
+        #label_image = Label(self.frame_profile, image = image)
+        label_name = Label(self.frame_profile, text = "Name")
+        label_users_name = Label(self.frame_profile, text = dev_one['name'])
+        label_grade = Label(self.frame_profile, text =  "Grade: " + str(dev_one["grade"]))
+        label_users_team = Label(self.frame_profile, text = dev_one['team'])
+        label_team = Label(self.frame_profile, text = "Team: ")
+        label_users_bio = Label(self.frame_profile, text = dev_one['bio'])
+        label_biography = Label(self.frame_profile, text = "Biography")
+        label_users_username = Label(self.frame_profile, text = dev_one["username"])
+        label_username = Label(self.frame_profile, text = "Username:")
+        label_users_password = Label(self.frame_profile, text = dev_one["password"])
+        label_password = Label(self.frame_profile, text = "Password:")
+        
+        label_bank = Label(self.frame_profile, text = "Bank: ")
+        label_warnings = Label(self.frame_profile, text = "Warning: ")
+        label_projects_complete = Label(self.frame_profile, text = "Projects Completed: ")
+        button_quit = Button(self.frame_profile, text = "Request Quit")
+        
+        if dev_one['warning'] > 0:
+            self.button_dispute.config
+        else:
+            label_warnings = Label(self.frame_profile, text = "Warning: ", state=DISABLED)
+        #label_image.grid(row = 0, column = 0, rowspan = 3)
+        label_name.grid(row = 0, column = 1, sticky = W)
+        label_users_name.grid(row = 0, column = 2, sticky = W)
+        label_grade.grid(row = 1, column = 1, sticky = W)
+        label_users_team.grid(row = 2, column = 2, sticky = W)
+        label_team.grid(row = 2, column = 1, sticky = W)
+        label_projects_complete.grid(row = 3, column = 1, sticky = W)
+        label_users_bio.grid(row = 4, column = 1, sticky = W)
+        label_biography.grid(row = 4, column = 0, sticky = W)
+        
+        self.button_edit.bind("<Button-1>", self.edit_button)
+        
+        #Has to be passed in
+        if self.profile_id == self.logged_in_id:
+            self.button_edit.grid(row = 0, column = 3, sticky = E)
+            label_username.grid(row = 5, column = 0, sticky = W)
+            label_users_username.grid(row = 5, column = 1, sticky = W)
+            label_password.grid(row = 6, column = 0, sticky = W)
+            label_users_password.grid(row = 6, column = 1, sticky = W)
+            label_bank.grid(row = 7, column = 0, sticky = W)
+            self.button_withdraw.grid(row = 7, column = 2)
+            self.button_deposit.grid(row = 7, column = 1)
+            label_warnings.grid(row = 8, column = 0, sticky = W)
+            self.button_dispute.grid(row = 8, column = 1)
+            button_quit.grid(row = 9, column = 0)
+            
     def top_user_profile(self,row,column, dev):
         color = "#3b0c0c"
         frame_temp = Frame(self.frame_main_chart, bg = color)
-        image = PhotoImage(file = "Dev.png")
+        image = PhotoImage(file = dev["image"])
         image = image.subsample(5,5)
         lable_image = Label(frame_temp, image = image, cursor = "hand2")
-        rank = "Rank " + str(row-1) 
+        lable_image.image = image
+        rank = "Rank " + str(row-1)
         if (row-1) == 1:
             rank += "st"
         elif (row-1) == 2:
@@ -155,8 +250,38 @@ class GUI():
         label_teams.grid(row = 5, column = 0, sticky = W)
         label_projects.grid(row = 6, column = 0, sticky = W)
     
-             
+    def log_in(self, event):
+        username = self.entry_username.get()
+        password = self.entry_password.get()
+        for user in users:
+            print (username + " " + password)
+            if(username == user['username'] and password == user['password']):
+                self.logged_in_id = user['id']
+                self.profile_id = self.logged_in_id
+                self.frame_user.grid_forget()
+                self.set_up_user(user)
+                break
+        self.entry_username.delete(0,"end")
+        self.entry_password.delete(0,"end")
+        
+    def log_out(self,event):
+        self.frame_logged_in.grid_forget()
+        self.logged_in_id = 0
+        self.frame_user.grid(row = 0, column = 3)
     
+    def home_button(self,event):
+        self.frame_current.grid_forget()
+        self.frame_current = self.frame_main_chart
+        self.frame_current.grid(row = 1, column = 0, sticky = S+W+N+E)
     
+    def edit_button(self,event):
+        print("lol")
+    
+    def profile_button(self,evnet):
+        self.frame_current.grid_forget()
+        self.set_up_profile()
+        self.frame_current = self.frame_profile
+        self.frame_current.grid(row = 1, column = 0)
+        
 start = GUI()
 start.origin.mainloop()
