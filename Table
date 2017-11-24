@@ -1,0 +1,45 @@
+from User import *
+import json
+
+class Table():
+    def __init__(self, file_name = ""):
+        self.list_of_objects_dictonaries = []
+        self.file_name = file_name
+        
+
+    def add(self,dictonary):
+        self.list_of_objects_dictonaries.append(dictonary)
+        
+    def print_list(self):
+        for dictonary in self.list_of_objects_dictonaries:
+            print(dictonary)
+            print("\n") 
+            
+    def get_list(self):
+        return self.list_of_objects_dictonaries
+    
+    def find(self, id):
+        for dictonary in self.list_of_objects_dictonaries:
+            if dictonary["id"] == id:
+                return dictonary
+        
+    def set_filename(self, new_filename):
+        self.file_name = new_filename
+                
+    def save(self):
+        with open(self.file_name, 'w') as FileObject:
+            json.dump(self.list_of_objects_dictonaries, FileObject)
+            
+    def load(self):
+        try: 
+            with open(self.file_name,'r') as FileObject:
+                self.list_of_objects_dictonaries = json.load(FileObject)
+        except FileNotFoundError:
+            self.save()
+            
+    def update(self, id, new_dictonary):
+        dictonary = self.find(id)
+        self.list_of_objects_dictonaries.remove(dictonary)
+        self.list_of_objects_dictonaries.append(new_dictonary)
+        print(id)
+        self.save()
