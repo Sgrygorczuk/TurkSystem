@@ -1,0 +1,168 @@
+from Project import *
+
+
+class User():
+    def __init__(self, name = "", id = 0, username = "", password = "",  avg_grade = 0, projects = [], image = "Dev.png", bids = [],
+                 team = "N/A", team_member = False, team_admin = False, bio = "", bank = 0, accept_pending = False, dispute_pending = False,
+                 quit_pending = False):
+        self.name = name
+        self.id = id
+        self.username = username
+        self.password =  password
+        self.avg_grade =  avg_grade
+        self.projects_id_list = projects
+        self.bids_id_list = bids
+        self.image = image
+        #Instead of Stroing team name it should store the teamid to be replaced once team class is made 
+        #self.team_id = 0
+        self.team = team
+        self.team_member = team_member
+        self.team_admin = team_admin
+        self.bio =  bio
+        self.bank = bank
+        self.warning_counter = 0
+        self.accept_pending = accept_pending
+        self.dispute_pending = dispute_pending
+        self.quit_pending = quit_pending
+        
+        self.dictonary = {"id" : self.id, "name" : self.name, "username": self.username, "password" : self.password, "avg_grade": self.avg_grade,
+                               "project_id_list": self.projects_id_list, "bid_id_list": self.bids_id_list, "image" : self.image, "team": self.team, 
+                               "team_member": self.team_member, "team_admin" : self.team_admin, "bio" : self.bio, "bank":self.bank, "warning": self.warning_counter,
+                               "accept_pending": self.accept_pending, "dispute_pending": self.dispute_pending, "quit_pending": self.quit_pending}
+    
+    def get_name(self):
+        return self.name
+
+    def set_name(self, new_name):
+        self.name = new_name
+        self.dictonary["name"] = new_name
+
+    def get_id(self):
+        return self.id
+    
+    def set_id(self, new_id):
+        self.id = new_id
+        self.dictonary["id"] = new_id
+    
+    def get_username(self):
+        return self.username
+    
+    def set_username(self, new_username):
+        self.username = new_username
+        self.dictonary["username"] = new_username
+    
+    def get_password(self):
+        return self.password
+
+    def set_password(self, new_password):
+        self.password = new_password
+        self.dictonary["password"] = new_password
+    
+    def get_avg_grade(self):
+        return self.avg_grade
+    
+    def update_avg_grade(self):
+        grades = 0
+        counter = 1
+        for id in self.projects_id_list:
+            dictonary = self.projects_id_list.find(id)
+            if self.id%2 == 0:
+                grades = grades + dictonary["developer_grade"]
+            else: 
+                grades = grades + dictonary["owner_grade"]
+                
+        self.avg_grade = grades/counter
+    
+    def set_avg_grade(self, new_avg_grade):
+    #This will be removed once a database is placed in and no one should be able to do something like that 
+        self.avg_grade = new_avg_grade
+        self.dictonary["avg_grade"] = new_avg_grade
+    
+    def get_projects_amount(self):
+        return len(self.projects_id_list)
+
+    def add_project(self, project_id):
+        self.projects_id_list.append(project_id)
+        self.dictonary["project_id_list"] = self.projects_id_list
+        #self.update_avg_grade()
+        
+    def get_project_id_list(self):
+        return self.projects_id_list
+
+    def get_image(self):
+        return self.image
+    
+    def set_image(self, new_image):
+        self.image = new_image 
+        self.dictonary["image"] = self.image
+    
+    def get_team(self):
+        return self.team
+
+    def set_team(self, new_team):
+        if(self.team_member):
+            print("You are a team member")
+        else:
+            self.team = new_team
+            self.dictonary["team"] = new_team
+            self.team_member = True
+            self.team_admin = True
+            self.dictonary["team_member" : True, "team_admin" : True]
+            
+    def get_team_member(self):
+        return self.team_member
+    
+    def get_team_admin(self):
+        return self.team_admin
+
+    def get_bio(self):
+        return self.bio
+
+    def set_bio(self, new_bio):
+        self.bio = new_bio
+        self.dictonary["bio"] = new_bio
+
+    def get_bank(self):
+        return self.bank
+    
+    def get_warning(self):
+        return self.warning_counter
+    
+    def get_dispute_status(self):
+        return self.dispute_pending
+
+    def get_quit_status(self):
+        return self.quit_pending
+    
+    def get_accepted_status(self):
+        return self.accept_pending
+    
+    def set_bank(self, new_bank):
+    #This will be removed once a database is placed in and no one should be able to do something like that 
+        self.bank =  new_bank
+        self.dictonary["bank"] =  new_bank
+
+    def withdraw(self, withdraw_amount):
+        if self.bank - withdraw_amount > 0:
+            self.bank = self.bank - withdraw_amount
+            self.dictonary["bank"] =  self.bank
+            
+    def deposit(self, deposit_amount):
+        self.bank = self.bank + abs(deposit_amount)
+        self.dictonary["bank"] =  self.bank
+  
+    def set_warning(self, new_warning):
+    #This will be removed once a database is placed in and no one should be able to do something like that 
+        self.warning_counter = new_warning
+        self.dictonary["warning"] =  new_warning
+        
+    def dispute(self):
+        self.dispute_pending = True
+    
+    def request_quit(self):
+        self.quit_pending = True
+        self.dictonary["quit_pending"] =  True
+    
+    def get_dictonary(self):
+        return self.dictonary
+    
