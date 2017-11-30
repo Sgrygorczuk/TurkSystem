@@ -5,6 +5,7 @@ import json
 def create_DB(DB):
     with open(DB+'.json', 'w') as f:
         json.dump({DB:[]}, f)    # {"project_db": []} 
+        print('created '+DB+'.json')
 
 ### TEST
 #create_DB("project_db")
@@ -50,7 +51,7 @@ def add_row(DB, new_row):
     # check if the row exists   
     for item in rows:
         if item["id"] == new_row["id"]: # all our database tables has a "id" attribute
-            print("id:"+str(new_row["id"])+" already exist on the json. Update using set_row(DB, id, key, new_value)")
+            print("id:"+str(new_row["id"])+" already exist on "+DB+".json. Update using set_row(DB, id, key, new_value)")
             return None
     else:
         # add the row
@@ -146,17 +147,17 @@ def get_value(DB, id, key):
 # 6. get last id
 # pre: DB.json exist
 # post: return the max(id) in the DB.json if there is at least one row in DB.json.
-#       Otherwise, return 0.
+#       Otherwise, return None
 def get_last_id(DB):
     rows = read_rows(DB)
     if (rows == None or len(rows) == 0):
-        return 0
+        return None
     else:
         ids = list(map(lambda row: row["id"], rows)) # extract a list of id
         return max(ids)
 ### TEST
 # get_last_id("project_db")      # 22
-# get_last_id("users")           # 0
+# get_last_id("not_exist")       # None
 ############################################################################
 
 # 7. update a row with new value for an attribute
