@@ -195,6 +195,29 @@ def set_row(DB, id, key, new_value):
 # set_row("project_db", 22, 'status', 'blacklisted')
 # get_value("project_db", 22, 'status')                 # 'blacklisted'
 ############################################################################
+# 7-1. update a existing row with many new values
+# pre: DB.json exist, new_row include 'id' attribute
+# post: if there is a row in DB like below, update the row and return the new row
+#      {"id":id, "key1":old_val1, "key2": old_val2 ... } -> {"id":id, "key1":new_val1, "key2": new_val2 ... } 
+#      Otherwise, return None
+def set_row(DB, new_row):
+    # remove the old row with the same id
+    removed_row = del_row(DB, new_row['id'])
+    if (removed_row == 0):
+        print("The row with id:"+str(new_row['id'])+" doesn't exist in "+DB+".json")
+        return None
+    
+    # update DB
+    rows = read_rows(DB)
+    rows.append(new_row)
+
+    # update json
+    new_DB = {DB: rows}
+    with open(DB+'.json', 'w') as f:
+        json.dump(new_DB, f)
+
+    return new_row
+############################################################################
 
 # 8. find all rows with { ... "key" : attribute ...} in DB.json
 # pre: DB.json exists
