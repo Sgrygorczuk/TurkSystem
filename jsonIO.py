@@ -166,7 +166,7 @@ def get_last_id(DB):
 # post: if there is a row in DB like below, update the row and return the new row
 #      {"id":id, "key":old_value, ... } -> {"id":id, "key":new_value, ... } 
 #      Otherwise, return None
-def set_row(DB, id, key, new_value):
+def set_value(DB, id, key, new_value):
     row = get_row(DB, id)
     if (row == None):
         return None
@@ -191,8 +191,8 @@ def set_row(DB, id, key, new_value):
     return row
 ### TEST
 # get_value("project_db", 22, 'status')                 # 'active'
-# print(set_row("project_db", 22, 's', 'blacklisted'))  # None
-# set_row("project_db", 22, 'status', 'blacklisted')
+# print(set_value("project_db", 22, 's', 'blacklisted'))  # None
+# set_value("project_db", 22, 'status', 'blacklisted')
 # get_value("project_db", 22, 'status')                 # 'blacklisted'
 ############################################################################
 # 7-1. update a existing row with many new values
