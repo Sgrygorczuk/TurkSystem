@@ -1,0 +1,69 @@
+from User import *
+from Project import *
+from Team import *
+from Bid import *
+from Task import *
+import ezcommands as ez
+from jsonIO import *
+from datetime import datetime
+from random import randint
+
+create_DB("user_db")
+create_DB("team_db")
+create_DB("project_db")
+create_DB("bid_db")
+
+now = str(datetime.now())
+
+
+resume = "Text messaging, or texting, is the act of composing and sending electronic messages, typically consisting of alphabetic and numeric characters, between two or more users of mobile phones, tablets, desktops/laptops, or other devices. Text messages may be sent over a cellular network, or may also be sent via an Internet connection.\n The term originally referred to messages sent using the Short Message Service (SMS). It has grown beyond alphanumeric text to include multimedia messages (known as MMS) containing digital images, videos, and sound content, as well as ideograms known as emoji (happy faces ,sad faces ,and other icons).\ n As of 2017, text messages are used by youth and adults for personal, family and social purposes and in business. Governmental and non-governmental organizations use text messaging for communication between colleagues. As with emailing, in the 2010s, the sending of short informal messages has become an accepted part of many cultures.[1] This makes texting a quick and easy way to communicate with friends and colleagues, including in contexts where a call would be impolite or inappropriate (e.g., calling very late at night or when one knows the other person is busy with family or work activities). Like e-mail and voice mail, and unlike calls (in which the caller hopes to speak directly with the recipient), texting does not require the caller and recipient to both be free at the same moment; this permits communication even between busy individuals. Text messages can also be used to interact with automated systems, for example, to order products or services from e-commerce websites, or to participate in online contests. Advertisers and service providers use direct text marketing to send messages to mobile users about promotions, payment due dates, and other notifications instead of using postal mail, email, or voicemail."
+
+
+super_user = User(name = "System Admin", username = "admin", password = "pass",user_type = "admin")
+user1 = User(name = "Johnny Boy", username = "eats", password = "Dog", team_id = 0, resume =  resume, user_type = "developer")
+user2 = User(name = "Jane Doe", username = "isa", password = 'cat', team_id = 0, user_type = "developer")
+user3 = User(name = "Cow", username = "can", password = 'code?', user_type = "developer")
+user4 = User(name = "Loner", username = "Loner", password = 'in_corner', team_id = 0,  user_type = "developer")
+
+
+client1 = User(name = "Jack Sparrow", username = "Fish", password = "cat", user_type = "client")
+client2 = User(name = "Jasmin Tea", username = "is", password = 'awesome!', user_type = "client")
+client3 = User(name = "Rick", username = "mr", password = 'meeseeks', user_type = "client")
+client4 = User(name = "Morty", username = "rick", password = 'adventure', user_type = "client")
+
+user5 = User(name = "Bonder", username = "1", password = '1', team_id = 0, user_type = "developer")
+user6 = User(name = "Franker", username = "2", password = '2', team_id = 0,  user_type = "developer")
+
+
+t1 = Team(admin_ids = [user1.get_id(), user4.get_id()], dev_ids = [user1.get_id(),user2.get_id(), user4.get_id(), user6.get_id()], join_request_ids = [user5.get_id()], name = "WallStreet, where many things can go wrong")
+t2 = Team(admin_ids = [], dev_ids = [], name = "One Cow Team")
+t3 = Team(admin_ids = [user4.get_id()], dev_ids = [user4.get_id()], name = "Rainbow Darkness")
+
+project1 = Project(client_id = client1.get_id(), client_rating = 3, team_rating = 4, title = "Hello", desc = "I have a lot of money", bid_id = now, dev_id = user1.get_id(), start_date = now, end_date = now)
+project2 = Project(client_id = client2.get_id(),client_rating = 2, team_rating = 3, title = "World", desc = "I have a lot of money, too?", bid_id = now, dev_id = user1.get_id(), start_date = now, end_date = now)
+project3 = Project(client_id = client3.get_id(), client_rating = 4, team_rating = 2, title = "Goodbye", desc = "I have more money than the other guy", dev_id = user1.get_id(), bid_id = now, start_date = now, end_date = now)
+project4 = Project(client_id = client4.get_id(), client_rating = 3, team_rating = 4, title = "VR", desc = "Don't listen to any of them, I have the most", dev_id = user1.get_id(), bid_id = now, start_date = now, end_date = now)
+project5 = Project(client_id = client4.get_id(), status = "active", title = "Cow", desc = "Moo", dev_id = user1.get_id(), bid_id = now, start_date = now, end_date = now)
+
+user1.add_project_ids(project1.get_id())
+client1.add_project_ids(project1.get_id())
+
+user1.add_project_ids(project2.get_id())
+client2.add_project_ids(project2.get_id())
+
+user1.add_project_ids(project3.get_id())
+client3.add_project_ids(project3.get_id())
+
+user1.add_project_ids(project4.get_id())
+client4.add_project_ids(project4.get_id())
+
+user1.add_project_ids(project5.get_id())
+client4.add_project_ids(project5.get_id())
+
+
+
+
+bid1 = Bid(project_id = project1.get_id(), start_date = now, end_date=now)
+bid2 = Bid(project_id = project2.get_id(), start_date = now, end_date=now)
+bid3 = Bid(project_id = project3.get_id(), start_date = now, end_date=now)
+bid4 = Bid(project_id = project4.get_id(), start_date = now, end_date=now)
