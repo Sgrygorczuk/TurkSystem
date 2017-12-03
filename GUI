@@ -1,85 +1,31 @@
 from User import *
-from Team import *
 from Project import *
-from Table import *
-
-from tkinter import *
-import tkinter.messagebox
-import datetime
+from Team import *
+from jsonIO import *
+from Task import *
+import ezcommands
 import math
-from _operator import index
 
-now = "2"
+import tkinter.messagebox
+from tkinter import *
 
-empty = User(id = 10, name = "John Doe", username = "Dog", password = "cat")
-empty_2 = User(id = 20, name = "Jane Doe", username = "Cat", password = 'cat', team = "Wallstreet", team_member = True, team_admin = True)
-empty_3 = User(id = 30, name = "Jonyy Doe", username = "Nose", password = 'cat', team = "Wallstreet", team_member = True)
-
-empty_client = User(id = 11, name = "Jack Doe", username = "Fish", password = "cat")
-empty_client_2 = User(id = 21, name = "Jasmin Doe", username = "Nope", password = 'cat')
-
-project_1 = Project(id = 1, name = "Hello", desciption = "I have a lot of money", bidding_start_date = now, bidding_end_date = now, current_date = now,
-                    owner_id = 11, developer_id = 10, max_payment_offer = 10, max_time_offer = 10, project_submit_date = now, project_sumbited = True,
-                    owner_grade = 4, owner_collected = True, developer_grade = 2)
-
-project_2 = Project(id = 2, name = "World", desciption = "I have a lot of money", bidding_start_date = now, bidding_end_date = now, current_date = now,
-                    owner_id = 21, developer_id = 10, max_payment_offer = 10, max_time_offer = 10, project_submit_date = now, project_sumbited = True,
-                    owner_grade = 1, owner_collected = True, developer_grade = 2)
-
-project_3 = Project(id = 3, name = "Helld", desciption = "I have a lot of money", bidding_start_date = now, bidding_end_date = now, current_date = now,
-                    owner_id = 21, developer_id = 10, max_payment_offer = 10, max_time_offer = 10, project_submit_date = now, project_sumbited = True,
-                    owner_grade = 2, owner_collected = True, developer_grade = 1)
-
-project_4 = Project(id = 4, name = "Hello World", desciption = "I have a lot of money", bidding_start_date = now, bidding_end_date = now, current_date = now,
-                    owner_id = 11, developer_id = 10, max_payment_offer = 10, max_time_offer = 10, project_submit_date = now, project_sumbited = True,
-                    owner_grade = 3, owner_collected = True, developer_grade = 3)
-
-empty.add_project(1)
-empty.add_project(2)
-empty.add_project(3)
-empty.add_project(4)
 
 
 class GUI():
 
     def __init__(self):
         self.origin = Tk()
-        
-        self.user_table = Table("users")
-        self.user_table.load()
-        self.users_id = []
-        self.create_list_of_id(self.users_id, self.user_table)
-        self.user_table.print_list()
-        
-        self.team_table = Table("teams")
-        self.team_table.load()
-        self.teams_id = []
-        
-        self.project_table = Table("projects")
-        self.project_table.load()
-        self.project_id = []
-        self.create_list_of_id(self.teams_id, self.team_table)
-        
-        self.bids_table = Table("bids")
-        self.bids_table.load()
-        
-        #Will update when it's first ran 
-        self.next_developer_id = 40
-        self.next_client_id = 31
-        self.top_three_teams = [1,2,3]
-        self.top_three_devs = [10,20,30]
-        self.top_three_clients = [11,21,11]
+              
+        self.top_three_teams_id = [0,1,2]
+        self.top_three_devs_id = [1,2,3]
+        self.top_three_clients_id = [5,6,7]
         self.software_statistic = [170, 85, 85, 55, 2.88, 623]
         
         #Set up the general screen
         self.origin.title("The Turk System")
-        self.frame_main_chart = Frame(self.origin, bg = "white")
         self.frame_over_lay = Frame(self.origin, bg = "#3b0c0c")
         self.frame_current = Frame(self.origin)
-        self.frame_new_account = Frame(self.origin)
         self.frame_profile = Frame(self.origin, bg = "white")
-        self.frame_proflie_projects = Frame(self.origin, bg = "white")
-        self.frame_stats = Frame(self.frame_main_chart, bg = "#1A5276")
         
         #Items form overlay that will need to be called back
         self.frame_user_login_input = Frame(self.frame_over_lay, bg = "#3b0c0c")
@@ -87,60 +33,26 @@ class GUI():
         self.entry_password = Entry(self.frame_user_login_input)
     
         self.frame_logged_in = Frame(self.frame_over_lay, bg = "#3b0c0c", cursor = "hand2")
-        self.logged_in_user = User()
-        self.profile_user = User()
-        self.profile_project = Project()
+        
+        
+        self.logged_in_user = {"id" : "Nan", "name": "", "interest": "", "team_id" : -1}   
+        self.profile_user = {"id" : "Nan", "name": "", "interest": "", "team_id" : -2}   
+        self.profile_project = {}
+        self.profile_team = {}
         #0 - Normal view, 1 - edit, 2 withdraw, 3 deposit, 4 dispute  
         self.proflie_state = 0
+        #0 - User, 1 - Team, 2 - Project 
+        self.profile_type = 0
         self.project_index = 0
         
         #Creates all the items
         self.set_up_top_user_chart()
-        self.set_up_software_stats()
         self.set_up_overlay()
         
-        self.frame_current = self.frame_main_chart
-        
-        #Puts the iteams on screen
-        self.frame_over_lay.grid(row = 0, column = 0, sticky = S+W+N+E)
-        self.frame_current.grid(row = 1, column = 0, sticky = S+W+N+E)
-    
-        
-    def create_user(self, id):
-        dictonary = self.user_table.find(id)
-        current_user = User(name = dictonary["name"], id = dictonary["id"], username = dictonary["username"], password = dictonary["password"], 
-                     avg_grade = dictonary["avg_grade"], projects = dictonary["project_id_list"], image = dictonary["image"], bids = dictonary["bid_id_list"],
-                     team = dictonary["team"], team_member = dictonary["team_member"], team_admin = dictonary["team_admin"], bio = dictonary["bio"],
-                     bank = dictonary["bank"], accept_pending = dictonary["accept_pending"], dispute_pending = dictonary["dispute_pending"],
-                     quit_pending = dictonary["quit_pending"])
-        return current_user
 
-    def create_team(self, id):
-        dictonary = self.team_table.find(id)
-        current_team = Team(id  = dictonary["id"], name  = dictonary["name"], is_team  = dictonary["is_team"], avg_grade  = dictonary["avg_grade"],
-                        image  = dictonary["image"], team_member_id_list  = dictonary["team_member_id_list"], team_admin_id_list  = dictonary["team_admin_id_list"], 
-                        project_id_list  = dictonary["project_id_list"])
-        return current_team
-
-    def create_project(self, id):
-        dictonary = self.project_table.find(id)
-        current_project = Project(id = dictonary["id"], owner_id = dictonary["owner_id"], name = dictonary["name"], desciption = dictonary["desciption"],
-                                bidding_start_date = dictonary["bidding_start_date"], current_date = dictonary["current_date"], bidding_end_date = dictonary["bidding_end_date"], 
-                                proejct_status = dictonary["proejct_status"], max_payment_offer = dictonary["max_payment_offer"], max_time_offer = dictonary["max_time_offer"],
-                                active_bid_id_list = dictonary["active_bid_id_list"], best_bid_id = dictonary["best_bid_id"], project_submit_date = dictonary["project_submit_date"],
-                                project_sumbited = dictonary["project_sumbited"], developer_id = dictonary["developer_id"], owner_grade = dictonary["owner_grade"], 
-                                owner_collected = dictonary["owner_collected"], developer_grade = dictonary["developer_grade"])
-        return current_project    
-        
-        
-    def create_list_of_id(self, id_list, database):
-        for dictonary in database.get_list():
-            id_list.append(dictonary['id'])
-    
-        
     def set_up_overlay(self):
         color = "#3b0c0c"
-        button_TTS = Button(self.frame_over_lay, text = "The Turk System", relief = FLAT, bg = color, fg = "white", cursor = "hand2")  
+        button_home = Button(self.frame_over_lay, text = "The Turk System", relief = FLAT, bg = color, fg = "white", cursor = "hand2")  
         entry_search_bar = Entry(self.frame_over_lay)
         button_search = Button(self.frame_over_lay, text = "Search", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
         label_username = Label(self.frame_user_login_input, text = "Username: ",bg = color, fg = "white")
@@ -148,12 +60,12 @@ class GUI():
         button_log_in = Button(self.frame_user_login_input, text = "Login", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
         button_create_account = Button(self.frame_user_login_input, text = "Create Account", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
         
-        button_TTS.bind("<Button-1>", self.home_button)
+        button_home.bind("<Button-1>", self.home_button)
         button_log_in.bind("<Button-1>", self.log_in)
         button_create_account.bind("<Button-1>", self.set_up_new_account)
         
-    
-        button_TTS.grid(row = 0, column = 0, sticky = W)
+        self.frame_over_lay.grid(row = 0, column = 0, sticky = E+W)
+        button_home.grid(row = 0, column = 0, sticky = W)
         entry_search_bar.grid(row = 0, column = 1, padx = 10)
         button_search.grid(row = 0, column = 2, sticky = E)
         self.frame_user_login_input.grid(row = 0, column = 3)
@@ -168,12 +80,13 @@ class GUI():
         color = "#3b0c0c"
         self.frame_logged_in.destroy()
         self.frame_logged_in = Frame(self.frame_over_lay, bg = "#3b0c0c", cursor = "hand2")
-        image = PhotoImage(file = user.get_image())
+        image = PhotoImage(file = user["pic"])
         image = image.subsample(12,12)
         label_image = Label(self.frame_logged_in, image = image, cursor = "hand2")
         label_image.image = image
-        label_name = Label(self.frame_logged_in, text = user.get_name(), bg = color, fg = "white", cursor = "hand2")
-        label_grade = Label(self.frame_logged_in, text = user.get_avg_grade(), bg = color, fg = "white", cursor = "hand2")
+        label_name = Label(self.frame_logged_in, text = user["name"], bg = color, fg = "white", cursor = "hand2")
+        #needs Grade
+        label_grade = Label(self.frame_logged_in, text = 0, bg = color, fg = "white", cursor = "hand2")
         button_logout = Button(self.frame_logged_in, text = "Log Out", relief = FLAT, bg = color, fg = "white", cursor = "hand2")
         
         button_logout.bind("<Button-1>", self.log_out)
@@ -187,51 +100,49 @@ class GUI():
         label_name.grid(row = 0, column = 1)
         label_grade.grid(row = 0, column = 2)
         button_logout.grid(row = 0, column = 3)
-
-
+        
+        
+        
     def set_up_top_user_chart(self):
-        self.frame_main_chart.destroy()
-        self.frame_main_chart = Frame(self.origin, bg = "white")
-        self.frame_current = self.frame_main_chart
+        self.frame_profile.destroy()
+        self.frame_profile = Frame(self.origin, bg = "white")
         
-        label_hall = Label(self.frame_main_chart, text = "Hall of Fame", bg = "white")
+        label_hall = Label(self.frame_profile, text = "Hall of Fame", bg = "white")
+        label_top_team = Label(self.frame_profile, text = "Top 3 Teams", bg = "white")
+        label_top_dev = Label(self.frame_profile, text = "Top 3 Developers", bg = "white")
+        label_top_client = Label(self.frame_profile, text = "Top 3 Clients", bg = "white")
     
-        column_counter = 0
         counter = 2
-        for team in self.top_three_teams:
-            current_team = self.create_team(team)
-            self.set_up_top_user_profile(row = counter, column = column_counter, user =  current_team)
+        for team_id in self.top_three_teams_id:
+            team = get_row("team_db", team_id)
+            self.set_up_top_user_profile(row = counter, column = 0, dictonary =  team)
             counter += 1
-        label_top_team = Label(self.frame_main_chart, text = "Top 3 Teams", bg = "white")
-
-        column_counter += 1
+            
         counter = 2
-        for dev in self.top_three_devs:
-            current_user = self.create_user(dev)
-            self.set_up_top_user_profile(row = counter, column = column_counter, user =  current_user)
+        for dev_id in self.top_three_devs_id:
+            user = get_row("user_db", dev_id)
+            self.set_up_top_user_profile(row = counter, column = 1, dictonary =  user)
+            counter += 1
+            
+        counter = 2
+        for client_id in self.top_three_clients_id:
+            client = get_row("user_db", client_id)
+            self.set_up_top_user_profile(row = counter, column = 2, dictonary =  client)
             counter += 1
         
-        column_counter += 1
-        label_top_dev = Label(self.frame_main_chart, text = "Top 3 Developers", bg = "white")
-        counter = 2
         
-        for client in self.top_three_clients:
-            current_user = self.create_user(client)
-            self.set_up_top_user_profile(row = counter, column = column_counter, user = current_user)
-            counter += 1
-        label_top_client = Label(self.frame_main_chart, text = "Top 3 Clients", bg = "white")
-    
         label_hall.grid(row = 0, column = 0, columnspan = 3, sticky = E+W+S+N)
         label_top_team.grid(row = 1, column = 0, sticky = W+E)
         label_top_dev.grid(row = 1, column = 1, sticky = W+E)
         label_top_client.grid(row = 1, column = 2, sticky = W+E)
-        self.frame_main_chart.grid(row = 1, column = 0, sticky = S+W+N+E)
+        self.frame_profile.grid(row = 1, column = 0, sticky = S+W+N+E)
+        
         self.set_up_software_stats()
         
-    def set_up_top_user_profile(self,row,column, user):
+    def set_up_top_user_profile(self,row,column, dictonary):
         color = "#3b0c0c"
-        frame_temp = Frame(self.frame_main_chart, bg = color)
-        image = PhotoImage(file = user.get_image())
+        frame_temp = Frame(self.frame_profile, bg = color)
+        image = PhotoImage(file = dictonary['pic'])
         image = image.subsample(5,5)
         lable_image = Label(frame_temp, image = image, cursor = "hand2")
         lable_image.image = image
@@ -243,40 +154,43 @@ class GUI():
         else:
             rank += "rd"
         label_rank = Label(frame_temp, text = rank, bg = color, fg = "white")
-        label_name = Label(frame_temp, text = "Name: " + user.get_name(), bg = color, fg = "white")
-        grade = "Grade: " + str(user.get_avg_grade())
-        label_grade = Label(frame_temp, text = grade, bg = color, fg = "white")
-        if row == 0:
-            team = "Team members " + str(user.get_team_member_amount())
-        else:
-            team = "Team: " + str(user.get_team())
-            lable_image.bind("<Button-1>", lambda event, arg = user: self.profile_button(event, arg))
-            
-        label_teams = Label(frame_temp, text = team, bg = color, fg = "white")
-        projects = "Projects Complete: " + str(user.get_projects_amount())
-        label_projects = Label(frame_temp, text = projects, bg = color, fg = "white")
+        label_name = Label(frame_temp, text = "Name: " + dictonary['name'], bg = color, fg = "white", wraplength = 150)
     
+        label_grade = Label(frame_temp, text = "Grade: " + str(ezcommands.get_grade(dictonary)), bg = color, fg = "white")
+        
+        if column == 0:
+            label_teams = Label(frame_temp, text = "Team members: " + str(len(dictonary["dev_ids"])), bg = color, fg = "white")
+            lable_image.bind("<Button-1>", lambda event, arg = dictonary: self.team_button(event, arg))
+            label_teams.grid(row = 5, column = 0, sticky = W)
+        else:
+            if dictonary["team_id"] == "Nan" and dictonary["user_type"] == "developer":
+                label_teams = Label(frame_temp, text = "Team: N/A", bg = color, fg = "white", wraplength = 150)
+                label_teams.grid(row = 5, column = 0, sticky = W)
+            elif dictonary["user_type"] == "developer":
+                label_teams = Label(frame_temp, text = "Team: " + get_row("team_db", dictonary["team_id"])["name"], bg = color, fg = "white", wraplength = 150)
+                label_teams.grid(row = 5, column = 0, sticky = W)
+            lable_image.bind("<Button-1>", lambda event, arg = dictonary: self.profile_button(event, arg))
+        
+        label_projects = Label(frame_temp, text = "Projects Complete: " + str(len(dictonary['project_ids'])), bg = color, fg = "white")
         frame_temp.grid(row = row, column = column, sticky = N+S+E+W, padx = 10, pady = 10, ipadx = 40)
         label_rank.grid(row = 2, column = 2)
         lable_image.grid(row = 2, column = 0, sticky = N+S+W)
         label_name.grid(row = 3, column =0, sticky = W)
         label_grade.grid(row = 4, column = 0, sticky = W)
-        label_teams.grid(row = 5, column = 0, sticky = W)
         label_projects.grid(row = 6, column = 0, sticky = W)
         
     def set_up_software_stats(self):
         color = "#1A5276"
-        self.frame_stats.destroy()
-        self.frame_stats = Frame(self.frame_main_chart, bg = color)
-        label_stats_title = Label(self.frame_stats, text = "The Turk System Statistics", bg = color, anchor = NE, fg = "white")
-        label_user_total =  Label(self.frame_stats, text = "Total Users: " + str(self.software_statistic[0]), bg = color, fg = "white")
-        label_user_devs =  Label(self.frame_stats, text = "Total Developers: " + str(self.software_statistic[1]), bg = color, fg = "white")
-        label_user_clients =  Label(self.frame_stats, text = "Total Clients: " + str(self.software_statistic[2]), bg = color, fg = "white")
-        label_user_teams =  Label(self.frame_stats, text = "Total Teams: " + str(self.software_statistic[3]), bg = color, fg = "white")
-        label_avg_grade =  Label(self.frame_stats, text = "Average Grade: " + str(self.software_statistic[4]), bg = color, fg = "white")
-        label_projects_completed =  Label(self.frame_stats, text = "Projects Completed: " + str(self.software_statistic[5]), bg = color, fg = "white")
+        frame = Frame(self.frame_profile, bg = color)
+        label_stats_title = Label(frame, text = "The Turk System Statistics", bg = color, anchor = NE, fg = "white")
+        label_user_total =  Label(frame, text = "Total Users: " + str(self.software_statistic[0]), bg = color, fg = "white")
+        label_user_devs =  Label(frame, text = "Total Developers: " + str(self.software_statistic[1]), bg = color, fg = "white")
+        label_user_clients =  Label(frame, text = "Total Clients: " + str(self.software_statistic[2]), bg = color, fg = "white")
+        label_user_teams =  Label(frame, text = "Total Teams: " + str(self.software_statistic[3]), bg = color, fg = "white")
+        label_avg_grade =  Label(frame, text = "Average Grade: " + str(self.software_statistic[4]), bg = color, fg = "white")
+        label_projects_completed =  Label(frame, text = "Projects Completed: " + str(self.software_statistic[5]), bg = color, fg = "white")
     
-        self.frame_stats.grid(row = 0, column = 4, rowspan = 20, columnspan = 3, sticky = S+N+W)
+        frame.grid(row = 0, column = 4, rowspan = 20, columnspan = 3, sticky = S+N+W)
         label_stats_title.grid(row = 0, column = 0, sticky = E+W, ipady = 20)
         label_user_total.grid(row = 1, column = 0, sticky = W)
         label_user_devs.grid(row = 2, column = 0, sticky = W)
@@ -284,30 +198,29 @@ class GUI():
         label_user_teams.grid(row = 4, column = 0, sticky = W)
         label_avg_grade.grid(row = 5, column = 0, sticky = W)
         label_projects_completed.grid(row = 6, column = 0, sticky = W)
-    
-    #def set_up_new_account(self):
         
-    
+        
+        
     def set_up_new_account(self, event):
         color = "#C3CBDE"
-        self.frame_new_account.destroy()
-        self.frame_new_account = Frame(self.origin, bg = "#C3CBDE")
+        self.frame_profile.destroy()
+        self.frame_profile = Frame(self.origin, bg = "#C3CBDE")
         
         var = IntVar()
-        button_developer = Radiobutton (self.frame_new_account, text = "Developer", bg = color, activebackground = color, cursor = "hand2", variable=var, value = 0)
-        button_client = Radiobutton (self.frame_new_account, text = "Client", bg = color, activebackground = color, cursor = "hand2", variable=var, value = 1)
-        button_create = Button(self.frame_new_account, text = "Create Account", bg = color )
-        label_name = Label(self.frame_new_account, text = "Name:", bg = color)
-        label_username = Label(self.frame_new_account, text = "Username:", bg = color)
-        label_password = Label(self.frame_new_account, text = "Password:", bg = color)
-        entry_name = Entry(self.frame_new_account)
-        entry_username = Entry(self.frame_new_account)
-        entry_password = Entry(self.frame_new_account)
+        button_developer = Radiobutton (self.frame_profile, text = "Developer", bg = color, activebackground = color, cursor = "hand2", variable=var, value = 0)
+        button_client = Radiobutton (self.frame_profile, text = "Client", bg = color, activebackground = color, cursor = "hand2", variable=var, value = 1)
+        button_create = Button(self.frame_profile, text = "Create Account", bg = color )
+        label_name = Label(self.frame_profile, text = "Name:", bg = color)
+        label_username = Label(self.frame_profile, text = "Username:", bg = color)
+        label_password = Label(self.frame_profile, text = "Password:", bg = color)
+        entry_name = Entry(self.frame_profile)
+        entry_username = Entry(self.frame_profile)
+        entry_password = Entry(self.frame_profile)
         
         button_create.bind("<Button-1>", lambda event, arg1 = var.get(), arg2 = entry_name.get(), arg3 = entry_username.get(),
                            arg4 = entry_password.get(): self.create_button(event, arg1, arg2, arg3, arg4))
         
-        self.frame_new_account.grid(row = 1, column = 0, sticky = S+E+W+N)
+        self.frame_profile.grid(row = 1, column = 0, sticky = S+E+W+N)
         label_name.grid(row = 0, column = 0)
         entry_name.grid(row = 0, column = 1)
         label_username.grid(row = 1, column = 0)
@@ -317,118 +230,129 @@ class GUI():
         button_developer.grid(row = 0, column = 2, sticky = E)
         button_client.grid(row = 1, column = 2, sticky = W)
         button_create.grid(row = 3, columnspan = 5, column = 0, sticky = E+W)
-        
+       
     def set_up_profile(self):
         self.frame_profile.destroy()
         self.frame_profile = Frame(self.origin, bg = "#C3CBDE")
         self.frame_current = self.frame_profile
         
-        self.set_up_profile_image()
-        self.set_up_profile_basic_info()
-        if self.logged_in_user.get_id() == self.profile_user.get_id():
-            self.set_up_profile_logged_in_info()
+        self.profile_type = 0
+        self.set_up_profile_image(self.profile_user)
+        self.set_up_user_profile_basic_info()
+        if self.logged_in_user["id"] == self.profile_user["id"]:
+            self.set_up_user_profile_logged_in_info()
         
-        
-        frame_profile_projects = Frame(self.frame_profile)
-        label_no_projects = Label(frame_profile_projects, text = "No Projects Attempted")
-        amount = 0 
-        n = 0 
-        page_amount = math.ceil((self.profile_user.get_projects_amount()/3))
-        list_id = self.profile_user.get_project_id_list()
-        Index = self.project_index
-        if page_amount == 0:
-            label_no_projects.grid(row = 0, column = 0)
-            frame_profile_projects.grid(row = 2, column = 0, columnspan = 2, sticky = N+E+W+S)
-            page_amount = 1
-        elif self.profile_user.get_projects_amount()-Index >= 3:
-            amount = 3
-        else:
-            amount = self.profile_user.get_projects_amount()
-        while(Index < amount):
-            self.set_up_profile_projects((2*(n+1)), list_id[Index])
-            n += 1
-            Index = Index + 1
-            
-        self.set_up_project_scroll(int((self.project_index/3))+1, page_amount)
-        
+        page_amount = self.set_up_projects(frame = self.frame_current, profile= self.profile_user, current_page= int((self.project_index/3))+1)
+        self.set_up_project_scroll(self.frame_profile, int((self.project_index/3))+1, page_amount)
         self.frame_profile.grid(row = 1, column = 0, sticky = S+N+E+W)
     
-    def set_up_profile_image(self):
-        frame_image = Frame(self.frame_profile, bg = "#C3CBDE")
-        image = PhotoImage(file = self.profile_user.get_image())
-        image = image.subsample(4,4)
-        label_image = Label(frame_image, image = image)
-        label_image.image = image
-        button_upload = Button(frame_image, text = "Upload Photo", bg = "#C3CBDE", cursor = "hand2")
-        
-        if self.proflie_state == 1:
-            button_upload.grid(row = 1, column = 0)
-        
-        frame_image.grid(row = 0, column = 0)
-        label_image.grid(row = 0, column = 0)
-
-    def set_up_profile_basic_info(self):
+    def set_up_user_profile_basic_info(self):
         color = "#C3CBDE"
         frame_basic_info = Frame(self.frame_profile, bg = color)
+        frame_resume = Frame(self.frame_profile, bg = "white")
         button_edit = Button(frame_basic_info, text = "Edit", bg = color, cursor = "hand2")
         button_save = Button(frame_basic_info, text = "Save", bg = color, cursor = "hand2")
         button_cancel = Button(frame_basic_info, text = "Cancel", bg = color, cursor = "hand2")
         button_create_team = Button(frame_basic_info, text = "Create Team", bg = color, cursor = "hand2")
         button_quit_team = Button(frame_basic_info, text = "Quit Team", bg = color, cursor = "hand2")
-        button_invite_team = Button(frame_basic_info, text = "Invite", bg = color, cursor = "hand2")
         button_kick_team = Button(frame_basic_info, text = "Kick", bg = color, cursor = "hand2")
         button_promote_team = Button(frame_basic_info, text = "Promote", bg = color, cursor = "hand2")
+        button_demote_team = Button(frame_basic_info, text = "Demote", bg = color, cursor = "hand2")
         label_name = Label(frame_basic_info, text = "Name", bg = color)
-        label_users_name = Label(frame_basic_info, text = self.profile_user.get_name(), bg = color)
-        label_grade = Label(frame_basic_info, text =  "Grade: " + str(self.profile_user.get_avg_grade()), bg = color)
-        label_team = Label(frame_basic_info, text = "Team: " + self.profile_user.get_team(), bg = color)
-        label_users_bio = Label(frame_basic_info, text = self.profile_user.get_bio(), bg = color, wraplength = 400)
-        label_biography = Label(frame_basic_info, text = "Biography", bg = color, )
-        label_projects_complete = Label(frame_basic_info, text = "Projects Completed: " + str(self.profile_user.get_projects_amount()), bg = color)
-        self.profile_name_entry = Entry(frame_basic_info)
-        self.proflie_bio_entry = Entry(frame_basic_info)
-        self.profile_name_entry.insert(0, self.logged_in_user.get_name())
-        self.proflie_bio_entry.insert(0, self.logged_in_user.get_bio())
+        label_users_name = Label(frame_basic_info, text = self.profile_user["name"], bg = color)
+        label_type = Label(frame_basic_info, text = self.profile_user["user_type"].title(), bg = color)
+        label_resume_name = Label(frame_resume, text = "Resume")
+        label_resume = Label(frame_resume, text = self.profile_user["resume"], bg = "white", wraplength = 400, justify = LEFT)
+        
+        if ezcommands.is_in_active_project(self.profile_user):
+            id = self.profile_user["project_ids"][len(self.profile_user["project_ids"]) - 1]
+            project = get_row("project_db", id)
+            label_active_project = Label(frame_basic_info, text = "Active Project: " + project["title"], bg = color, cursor = "hand2")
+            label_active_project.bind("<Button-1>", lambda event, arg =  id: self.project_button(event, id))
+        else: 
+            label_active_project = Label(frame_basic_info, text = "No Active Project", bg = color)
+    
+        grade = ezcommands.get_grade(self.profile_user)
+        label_grade = Label(frame_basic_info, text =  "Grade: " + str(grade), bg = color)
+        
+        if self.profile_user["user_type"] == "developer":
+            if self.profile_user["team_id"] == "Nan":
+                label_team = Label(frame_basic_info, text = "Team: N/A", bg = color)
+            else:
+                team = get_row("team_db", self.profile_user["team_id"])
+                label_team = Label(frame_basic_info, text = "Team: " + team["name"], bg = color, wraplength = 150, cursor = "hand2")
+                label_team.bind("<Button-1>", lambda event, arg =  team: self.team_button(event, team))
+            label_team.grid(row = 3, column = 0, sticky = W)
+            
+
+        label_users_bio = Label(frame_basic_info, text = self.profile_user["interest"], bg = color, wraplength = 400, justify = LEFT)
+        label_biography = Label(frame_basic_info, text = "Interest", bg = color, )
+        label_projects_complete = Label(frame_basic_info, text = "Projects Completed: " + str(len(self.profile_user["project_ids"])), bg = color)
         
         if self.proflie_state != 1:
-            label_users_name.grid(row = 0, column = 1, sticky = W)
-            label_users_bio.grid(row = 4, column = 1, sticky = W)
+            label_users_name.grid(row = 1, column = 1, sticky = W)
+            label_users_bio.grid(row = 5, column = 1, sticky = W)
+            label_resume.grid(row = 1, column = 0, sticky = W+E)
         else:
-            self.profile_name_entry.grid(row = 0, column = 1)
-            self.proflie_bio_entry.grid(row = 4, column = 1)
+            
+            self.profile_name_entry = Entry(frame_basic_info)
+            self.proflie_bio_entry = Text(frame_basic_info, height=2, width=30)
+            scroll = Scrollbar(frame_basic_info)
+            scroll.config(command=self.proflie_bio_entry.yview)
+            self.proflie_bio_entry.config(yscrollcommand=scroll.set)
         
-        if self.logged_in_user.get_id() == self.profile_user.get_id():
+            self.proflie_resume_text_box = Text(frame_resume, height=30, width=50)
+            scroll_two = Scrollbar(frame_resume)
+            scroll.config(command=self.proflie_resume_text_box.yview)
+            self.proflie_bio_entry.config(yscrollcommand=scroll_two.set)
+            self.profile_name_entry.insert(0, self.logged_in_user["name"])
+            self.proflie_bio_entry.insert(END, self.logged_in_user["interest"])
+            self.proflie_resume_text_box.insert(END, self.logged_in_user["resume"])
+            
+            self.profile_name_entry.grid(row = 1, column = 1)
+            self.proflie_bio_entry.grid(row = 5, column = 1)
+            self.proflie_resume_text_box.grid(row = 1, column = 0, sticky = W+E)
+            
+
+        
+        
+        if self.logged_in_user["id"] == self.profile_user["id"]:
             if self.proflie_state == 0 :
                 button_edit.grid(row = 0, column = 2, sticky = E)
-                if self.profile_user.get_id()%2 == 0:
-                    if self.logged_in_user.get_accepted_status() :
-                        if self.logged_in_user == self.profile_user and self.logged_in_user.get_team_member():
-                            button_quit_team.grid(row = 2, column = 1)
-                        else:
-                            button_create_team.grid(row = 2, column = 1)
+                if self.logged_in_user['user_type'] == "developer":
+                    if self.logged_in_user["team_id"] != "Nan" :
+                        button_quit_team.grid(row = 3, column = 1)
+                    else:
+                        button_create_team.grid(row = 3, column = 1)
             elif self.proflie_state == 1:
                 button_save.grid(row = 0, column = 2, sticky = E)
                 button_cancel.grid(row = 0, column = 3, sticky = E)
         else:
-            if self.proflie_state == 0 and self.profile_user.get_id()%2 == 0 and self.logged_in_user.get_id() != 0: 
-                if self.profile_user.get_accepted_status() and not self.profile_user.get_team_member():
-                    button_invite_team.grid(row = 2, column = 1)
-                if self.profile_user.get_accepted_status() and self.logged_in_user.get_team() == self.profile_user.get_team() and not self.profile_user.get_team_admin():
-                        button_promote_team.grid(row = 2, column = 2, sticky = E)
+            if self.logged_in_user["id"] != self.profile_user["id"] and self.profile_user["user_type"] == "developer" : 
+                if self.logged_in_user["team_id"] == self.profile_user["team_id"]:
                         button_kick_team.grid(row = 2, column = 1, sticky = E)
+                        if ezcommands.is_admin(self.logged_in_user):
+                            button_promote_team.grid(row = 2, column = 2, sticky = E)
+                        else:
+                            button_promote_team.grid(row = 2, column = 2, sticky = E)
+                
                 
         button_edit.bind("<Button-1>", self.edit_button)
         button_save.bind("<Button-1>", self.save_button)
         button_cancel.bind("<Button-1>", self.cancel_button)
                 
         frame_basic_info.grid(row = 0, column = 1, sticky = N+E+W+S)
-        label_name.grid(row = 0, column = 0, sticky = W)
-        label_grade.grid(row = 1, column = 0, sticky = W)
-        label_team.grid(row = 2, column = 0, sticky = W)
-        label_projects_complete.grid(row = 3, column = 0, sticky = W)
-        label_biography.grid(row = 4, column = 0, sticky = W)
+        frame_resume.grid(row = 0, column = 2, sticky = N+S+E+W, rowspan = 20)
+        label_resume.grid(row = 1, column = 0, sticky = W+E)
+        label_resume_name.grid(row = 0, column = 0, sticky = W+E)
+        label_type.grid(row = 0, column = 0, sticky = W)
+        label_name.grid(row = 1, column = 0, sticky = W)
+        label_grade.grid(row = 2, column = 0, sticky = W)
+        label_projects_complete.grid(row = 4, column = 0, sticky = W)
+        label_biography.grid(row = 5, column = 0, sticky = W)
+        label_active_project.grid(row = 6, column = 0, sticky = W)
         
-    def set_up_profile_logged_in_info(self):
+    def set_up_user_profile_logged_in_info(self):
         color = "#C3CBDE"
         frame_logged_in = Frame(self.frame_profile, bg = color)
         button_cancel = Button(frame_logged_in, text = "Cancel", bg = color, cursor = "hand2")
@@ -438,17 +362,18 @@ class GUI():
         button_deposit_submit = Button(frame_logged_in, text = "Deposit ", bg = color, cursor = "hand2")
         button_withdraw_submit = Button(frame_logged_in, text = "Withdraw", bg = color, cursor = "hand2")
         button_quit = Button(frame_logged_in, text = "Request Quit", bg = color, cursor = "hand2")
+        button_create_new_project = Button(frame_logged_in, text = "Create New Project ", bg = color, cursor = "hand2")
         self.profile_username_entry = Entry(frame_logged_in)
         self.profile_password_entry = Entry(frame_logged_in)
         self.profile_cash_amount_entry = Entry(frame_logged_in)
-        self.profile_username_entry.insert(0, self.logged_in_user.get_username())
-        self.profile_password_entry.insert(0, self.logged_in_user.get_password())
-        label_users_username = Label(frame_logged_in, text = self.logged_in_user.get_username(), bg = color)
+        self.profile_username_entry.insert(0, self.logged_in_user["username"])
+        self.profile_password_entry.insert(0, self.logged_in_user["password"])
+        label_users_username = Label(frame_logged_in, text = self.logged_in_user["username"], bg = color)
         label_username = Label(frame_logged_in, text = "Username:", bg = color)
-        label_users_password = Label(frame_logged_in, text = self.logged_in_user.get_password(), bg = color)
+        label_users_password = Label(frame_logged_in, text = self.logged_in_user["password"], bg = color)
         label_password = Label(frame_logged_in, text = "Password:", bg = color)
-        label_bank = Label(frame_logged_in, text = "Bank: $" + str(self.logged_in_user.get_bank()), bg = color)
-        label_warnings = Label(frame_logged_in, text = "Warnings: " + str(self.logged_in_user.get_warning()), bg = color)
+        label_bank = Label(frame_logged_in, text = "Bank: $" + str(self.logged_in_user["balance"]), bg = color)
+        label_warnings = Label(frame_logged_in, text = "Warnings: " + str(self.logged_in_user["warning"]), bg = color)
             
         button_cancel.bind("<Button-1>", self.cancel_button)
         button_withdraw.bind("<Button-1>", self.withdraw_button)
@@ -456,21 +381,24 @@ class GUI():
         button_deposit.bind("<Button-1>", self.deposit_button)
         button_deposit_submit.bind("<Button-1>", self.deposit_accept_button)
             
-        if self.logged_in_user.get_warning() > 0 : 
+        if self.logged_in_user["warning"] > 0 : 
             button_dispute.config(state = NORMAL)
-        elif self.logged_in_user.get_warning() > 0 and self.logged_in_user.get_dispute_status: 
+        elif self.logged_in_user["warning"] > 0 and self.logged_in_user.get_dispute_status: 
             button_dispute.config(state = DISABLED, cursor = 'arrow')
         else:
             button_dispute.config(state = DISABLED, cursor = 'arrow')
             
-        if self.logged_in_user.get_bank() < 0:
+        if self.logged_in_user["balance"] <= 0:
             button_withdraw.config(state = DISABLED)
         
-        if self.logged_in_user.get_quit_status():
-            button_quit.config(state = DISABLED, cursor = 'arrow')
-        else:
-            button_quit.bind("<Button-1>", self.quit_button)
         
+        #Need way to show that they requested to quit from system 
+        ###############
+        #if self.logged_in_user.get_quit_status():
+            #button_quit.config(state = DISABLED, cursor = 'arrow')
+        #else:
+            #button_quit.bind("<Button-1>", self.quit_button)
+        #################
         
         frame_logged_in.grid(row = 1, column = 0, sticky =S+E+N+W)
         label_username.grid(row = 0, column = 0, sticky = W)
@@ -485,6 +413,8 @@ class GUI():
             button_withdraw.grid(row = 2, column = 2)
             button_dispute.grid(row = 3, column = 1)
             button_quit.grid(row = 4, column = 0)
+            if self.profile_user["user_type"] == "client" and not ezcommands.is_in_active_project(self.profile_user): #and self.profile_user["active_project_id"] = "Nan
+                button_create_new_project.grid(row = 7, column = 3, sticky = E+W)
         elif self.proflie_state == 1:
             self.profile_password_entry.grid(row = 1, column = 1, sticky = W)
         elif self.proflie_state == 2:
@@ -495,29 +425,260 @@ class GUI():
             self.profile_cash_amount_entry.grid(row = 2, column = 1)
             button_deposit_submit.grid(row = 2, column = 2)
             button_cancel.grid(row = 2, column = 3, sticky = E)
+
+
+    def set_up_team_profile(self):
+        self.frame_profile.destroy()
+        self.frame_profile = Frame(self.origin, bg = "#C3CBDE")
+        self.frame_current = self.frame_profile
         
-    def set_up_profile_projects(self, Row, id):
-        project = self.create_project(id)
-        client = self.create_user(project.get_owener_id())
-        dev = self.create_user(project.get_developer_id())
-        frame_profile_projects = Frame(self.frame_profile, bg = "white")
+        self.profile_type = 1
+        self.set_up_team_profile_basic_info()
+        self.set_up_profile_image(self.profile_team)
+        
+
+        frame_members = Frame(self.frame_profile, bg = "white")
+        frame_admins = Frame(self.frame_profile, bg = "white")
+        frame_requests = Frame(self.frame_profile, bg = "white")
+        label_members = Label(frame_members, text = "Members", bg = "white")
+        label_admins = Label(frame_admins, text = "Administrators", bg = "white")
+        label_requests = Label(frame_requests, text = "Join Requests" , bg = "white")
+        
+        self.set_up_team_lists(frame_members, self.profile_team['dev_ids'], 0)
+        self.set_up_team_lists(frame_admins, self.profile_team['admin_ids'], 1)
+        if self.logged_in_user["team_id"] == self.profile_team['id'] and ezcommands.is_admin(self.logged_in_user):
+            self.set_up_team_lists(frame_requests, self.profile_team['join_request_ids'], 2)
+            label_requests.grid(row = 0, column = 0, sticky = E+W)
+            frame_requests.grid(row = 0, column = 4, sticky = S+N+E+W, rowspan = 40, padx = 5)
+            
+            
+        page_amount = self.set_up_projects(frame = self.frame_profile, profile= self.profile_team, current_page= int((self.project_index/3))+1)
+        self.set_up_project_scroll(self.frame_profile, int((self.project_index/3))+1, page_amount)
+        label_members.grid(row = 0, column = 0, sticky = E+W)
+        label_admins.grid(row = 0, column = 0, sticky = E+W)
+        frame_members.grid(row = 0, column = 2, sticky = S+N+E+W, rowspan = 40, padx = 5)
+        frame_admins.grid(row = 0, column = 3, sticky = S+N+E+W, rowspan = 40, padx = 5)
+        self.frame_profile.grid(row = 1, column = 0, sticky = S+N+E+W)
+        
+    def set_up_team_lists(self, frame, list, frame_num):
+        page_amount = math.ceil((len(list))/8)
+        if page_amount == 0:
+            page_amount = 1 
+        amount = 0
+        n = 1
+        Index = self.project_index
+        if len(list)-Index >= 8:
+            amount = 8
+        else:
+            amount = len(list)
+        while(Index < amount):
+            self.set_up_member_lists(frame, list[Index], frame_num, n)
+            n += 1
+            Index = Index + 1
+        
+        self.set_up_project_scroll(frame, int((self.project_index/8))+1, page_amount)
+        
+    def set_up_team_profile_basic_info(self):
+        color = "#C3CBDE"
+        frame_basic_info = Frame(self.frame_profile, bg = color)
+        label_name_static = Label(frame_basic_info, text = "Name: ", bg = color)
+        label_name = Label(frame_basic_info, text = self.profile_team['name'], bg = color)
+        label_description_static = Label(frame_basic_info, text = "Description: ", bg = color)
+        label_description = Label(frame_basic_info, text = self.profile_team["desc"], bg = color)
+        button_edit = Button(frame_basic_info, text = "Edit", bg = color, cursor = "hand2")
+        button_save = Button(frame_basic_info, text = "Save", bg = color, cursor = "hand2")
+        button_cancel = Button(frame_basic_info, text = "Cancel", bg = color, cursor = "hand2")
+        button_request_join = Button(frame_basic_info, text = "Request Join", bg = color, cursor = "hand2")
+        button_quit_team = Button(frame_basic_info, text = "Quit Team", bg = color, cursor = "hand2")
+        button_disband_team = Button(frame_basic_info, text = "Disband Team", bg = color, cursor = "hand2")
+        self.profile_name_entry = Entry(frame_basic_info)
+        self.profile_name_entry = Entry(frame_basic_info)
+        self.proflie_bio_entry = Text(frame_basic_info, height=2, width=30)
+        scroll = Scrollbar(frame_basic_info)
+        scroll.config(command=self.proflie_bio_entry.yview)
+        self.proflie_bio_entry.config(yscrollcommand=scroll.set)
+        self.profile_name_entry.insert(0, self.profile_team['name'])
+        self.proflie_bio_entry.insert(END, self.profile_team["desc"])
+        
+        if self.proflie_state != 1:
+            label_name.grid(row = 1, column = 1, sticky = W)
+            label_description.grid(row = 2, column = 1, sticky = W)
+        else:
+            self.profile_name_entry.grid(row = 1, column = 1)
+            self.proflie_bio_entry.grid(row = 2, column = 1)
+        print(self.logged_in_user["team_id"])
+        if self.logged_in_user["team_id"] == self.profile_team['id']:
+            if self.proflie_state == 0 :
+                if ezcommands.is_admin(self.logged_in_user):
+                    button_edit.grid(row = 0, column = 2, sticky = E)
+                button_quit_team.grid(row = 3, column = 2)
+            elif self.proflie_state == 1:
+                button_save.grid(row = 0, column = 2, sticky = E)
+                button_cancel.grid(row = 0, column = 3, sticky = E)
+                button_disband_team.grid(row = 3, column = 3)
+        elif self.logged_in_user["team_id"] == "Nan"  and self.logged_in_user["user_type"] == "developer":
+            button_request_join.grid(row = 0, column = 2, sticky = E)
+            button_request_join.bind("<Button-1>", lambda event, arg = self.logged_in_user["id"]: self.request_join_team_button(event, arg))
+
+        
+        button_edit.bind("<Button-1>", self.edit_button)
+        button_save.bind("<Button-1>", self.save_button)
+        button_cancel.bind("<Button-1>", self.cancel_button)
+        
+        label_name_static.grid(row = 1, column = 0, sticky = W)
+        label_description_static.grid(row = 2, column = 0, sticky = W)
+        frame_basic_info.grid(row = 0, column = 1)
+
+    def set_up_member_lists(self, frame, id, frame_num, Row):
+        if Row%2 == 0:
+            color = "#C3CBDE"
+        else: 
+            color = "white"
+        user = get_row("user_db",id)
+        button_demote_team = Button(frame, text = "Demote", bg = color, cursor = "hand2")
+        button_kick_team = Button(frame, text = "Kick", bg = color, cursor = "hand2")
+        button_promote_team = Button(frame, text = "Promote", bg = color, cursor = "hand2")
+        button_accept = Button(frame, text = "Accept", bg = color, cursor = "hand2")
+        button_reject = Button(frame, text = "Reject", bg = color, cursor = "hand2")
+        label_name = Label(frame, text = user['name'], bg = color, cursor = "hand2")
+        label_grade = Label(frame,text = ezcommands.get_grade(user), bg = color, cursor = "hand2")
+        
+        if self.logged_in_user["team_id"] == self.profile_team["id"] and ezcommands.is_admin(self.logged_in_user) and user['id'] != self.logged_in_user["id"]:
+            if frame_num == 0:
+                button_kick_team.grid(row = Row, column = 3, sticky = W+E)
+                button_kick_team.bind("<Button-1>", lambda event, arg = id: self.kick_button(event, arg))
+                if not ezcommands.is_admin(user):
+                    button_promote_team.grid(row = Row, column = 2, sticky = W+E)
+                    button_promote_team.bind("<Button-1>", lambda event, arg = id: self.promote_button(event, arg))
+            elif frame_num == 1:
+                button_demote_team.grid(row = Row, column = 2, sticky = W+E)
+                button_kick_team.grid(row = Row, column = 3, sticky = W+E)
+                button_kick_team.bind("<Button-1>", lambda event, arg = id: self.kick_button(event, arg))
+                button_demote_team.bind("<Button-1>", lambda event, arg = id: self.demote_button(event, arg))
+            else:
+                button_accept.grid(row = Row, column = 2, sticky = W+E)
+                button_accept.bind("<Button-1>", lambda event, arg = id: self.accept_team_button(event, arg))
+                button_reject.bind("<Button-1>", lambda event, arg = id: self.reject_team_button(event, arg))
+                button_reject.grid(row = Row, column = 3, sticky = W+E)
+        
+        label_name.bind("<Button-1>", lambda event, arg = user: self.profile_button(event, arg))
+        
+        label_name.grid(row = Row, column = 0, sticky = W+E, pady = 5)
+        label_grade.grid(row = Row, column = 1, sticky = W+E)
+
+    def set_up_project_profile(self):
+        self.frame_profile.destroy()
+        self.frame_profile = Frame(self.origin, bg = "#C3CBDE")
+        self.frame_current = self.frame_profile
+        client = get_row("user_db", self.profile_project["client_id"])
+        
+        label_project_name_static = Label(self.frame_profile, text = "Name: ")
+        label_project_name = Label(self.frame_profile, text = self.profile_project["title"])
+        label_project_client_name_static = Label(self.frame_profile, text = "Client Name: ")
+        label_project_client_name = Label(self.frame_profile, text = client["name"])
+        label_project_client_grade_static = Label(self.frame_profile, text = "Grade: ")
+        label_project_client_grade = Label(self.frame_profile, text = ezcommands.get_grade(client))
+        label_project_decsription_static = Label(self.frame_profile, text = "Decsription: ")
+        label_project_decsription = Label(self.frame_profile, text = self.profile_project["desc"])
+        label_project_max_pay_static = Label(self.frame_profile, text = "Maximum Offer: $")
+        #label_project_max_pay = Label(self.frame_profile, text = self.profile_project.get_max_payment())
+        label_project_submission_date_static = Label(self.frame_profile, text = "Max Due Date: ")
+        #label_project_submission_date = Label(self.frame_profile, text = self.profile_project.get_max_time())
+        
+        
+        label_project_name_static.grid(row = 1, column = 0, sticky = W)
+        label_project_name.grid(row = 1, column = 1, sticky = W)
+        label_project_client_name_static.grid(row = 2, column = 0, sticky = W)
+        label_project_client_name.grid(row = 2, column = 1, sticky = W)
+        label_project_client_grade_static.grid(row = 2, column = 2, sticky = W)
+        label_project_client_grade.grid(row = 2, column = 3, sticky = W)
+        label_project_decsription_static.grid(row = 3, column = 0, sticky = W)
+        label_project_decsription.grid(row = 3, column = 1, sticky = W)
+        label_project_max_pay_static.grid(row = 4, column = 0, sticky = W)
+        #label_project_max_pay.grid(row = 4, column = 1, sticky = W)
+        label_project_submission_date_static.grid(row = 5, column = 0, sticky = W)
+        #label_project_submission_date.grid(row = 5, column = 1, sticky = W)
+        self.frame_profile.grid(row = 1, column = 0, sticky = S+N+E+W)
+
+
+
+    def set_up_profile_image(self, profile):
+        frame_image = Frame(self.frame_profile, bg = "#C3CBDE")
+        image = PhotoImage(file = profile["pic"])
+        image = image.subsample(4,4)
+        label_image = Label(frame_image, image = image)
+        label_image.image = image
+        button_upload = Button(frame_image, text = "Upload Photo", bg = "#C3CBDE", cursor = "hand2")
+        
+        if self.proflie_state == 1:
+            button_upload.grid(row = 1, column = 0)
+        
+        frame_image.grid(row = 0, column = 0)
+        label_image.grid(row = 0, column = 0)    
+    
+    def set_up_projects(self, frame, profile, current_page):
+        frame_profile_projects = Frame(frame)
+        label_no_projects = Label(frame_profile_projects, text = "No Projects Attempted")
+        amount = 0 
+        n = 0 
+        page_amount = math.ceil(len(profile["project_ids"])/3)
+        list_id = profile["project_ids"]
+        Index = self.project_index
+        if page_amount == 0:
+            label_no_projects.grid(row = 0, column = 0)
+            frame_profile_projects.grid(row = 2, column = 0, columnspan = 2, sticky = N+E+W+S)
+            page_amount = 1
+        elif len(profile['project_ids'])-Index >= 3:
+            amount = 3*current_page
+        else:
+            amount = len(profile["project_ids"])
+        while(Index < amount):
+            self.set_up_profile_projects((2*(n+1)), list_id[Index], Index)
+            n += 1
+            Index = Index + 1
+        return page_amount
+        
+    def set_up_profile_projects(self, Row, id, Index):
+        project = get_row("project_db", id)
+        client = get_row("user_db", project['client_id'])
+        frame_profile_projects = Frame(self.frame_profile, bg = "white", cursor = "hand2")
+        #Checks for weather a team or a dev got assigned to the project 
+        if project["dev_id"] == "Nan":
+            team = get_row("user_team", project['team_id'])
+            label_developer_name = Label(frame_profile_projects, text = "Team: " + team["name"], bg = "white", cursor = "hand2")
+            label_dev_grade = Label(frame_profile_projects, text = "Grade " + str(project["team_rating"]) + "|"  , bg = "white", cursor = "hand2")
+        else:
+            dev = get_row("user_db", project['dev_id'])
+            label_developer_name = Label(frame_profile_projects, text = "Developer: " + dev["name"], bg = "white", cursor = "hand2")
+            label_dev_grade = Label(frame_profile_projects, text = "Grade " + str(project["team_rating"]) + "|"  , bg = "white", cursor = "hand2")
+            
+        label_project_name = Label(frame_profile_projects, text = "Project Name: "  + project["title"] + " |", bg = "white", cursor = "hand2" )
+        label_owner_name = Label(frame_profile_projects, text = "Client: " + client["name"], bg = "white", cursor = "hand2")
+        label_owner_grade = Label(frame_profile_projects, text = "Grade " + str(project['team_rating']) + " |", bg = "white", cursor = "hand2")
+        label_description = Label(self.frame_profile, text = "Description " + project['desc'], justify= 'left')
+        if(ezcommands.is_in_active_project(client) and client["project_ids"][len(client["project_ids"]) - 1] == id):
+            label_active = Label(frame_profile_projects, text = "Active", justify= 'left', bg = "white")
+            label_active.grid(row = 1, column = 0, sticky = E+W)
+            
+        frame_profile_projects.bind("<Button-1>", lambda event, arg = id: self.project_button(event, arg))                          
+        label_project_name.bind("<Button-1>", lambda event, arg = id: self.project_button(event, arg))
+        label_owner_name.bind("<Button-1>", lambda event, arg = id: self.project_button(event, arg))
+        label_owner_grade.bind("<Button-1>", lambda event, arg = id: self.project_button(event, arg))
+        label_description.bind("<Button-1>", lambda event, arg = id: self.project_button(event, arg))
+        label_dev_grade.bind("<Button-1>", lambda event, arg = id: self.project_button(event, arg))
+        label_developer_name.bind("<Button-1>", lambda event, arg = id: self.project_button(event, arg))
+        
         frame_profile_projects.grid(row = Row, column = 0, columnspan = 2, sticky = N+E+W+S)
-        label_project_name = Label(frame_profile_projects, text = "Project Name: "  + project.get_name() + " |", bg = "white")
-        label_owner_name = Label(frame_profile_projects, text = "Client: " + client.get_name(), bg = "white")
-        label_owner_grade = Label(frame_profile_projects, text = "Grade " + str(project.get_owner_grade()) + " |", bg = "white")
-        label_developer_name = Label(frame_profile_projects, text = "Developer: " + dev.get_name(), bg = "white")
-        label_dev_grade = Label(frame_profile_projects, text = "Grade " + str(project.get_developer_grade())  , bg = "white")
-        label_description = Label(self.frame_profile, text = "Description " + project.get_description(), justify= 'left')
-                                  
-        label_project_name.grid(row = 0, column = 0, sticky = E+W)
-        label_owner_name.grid(row = 0, column = 1, sticky = E+W) 
-        label_owner_grade.grid(row = 0, column = 2, sticky = E+W)
         label_developer_name.grid(row = 0, column = 3, sticky = E+W)
         label_dev_grade.grid(row = 0, column = 4, sticky = E+W)
-        label_description.grid(row = Row+1, column = 0, columnspan = 2, sticky = W+E)
+        label_project_name.grid(row = 0, column = 0, sticky = W+E+N+S)
+        label_owner_name.grid(row = 0, column = 1, sticky = W+E+N+S) 
+        label_owner_grade.grid(row = 0, column = 2, sticky = W+E+N+S)
+        label_description.grid(row = Row+1, column = 0, columnspan = 2, sticky = W+E+N+S)
+                                  
         
-    def set_up_project_scroll(self, current_page, page_amount):    
-        frame_page = Frame(self.frame_profile, bg = "white")
+    def set_up_project_scroll(self, frame, current_page, page_amount):    
+        frame_page = Frame(frame, bg = "white")
         button_left = Button(frame_page, text = "<", bg = "white", relief = FLAT, cursor = "hand2")
         button_right = Button(frame_page, text = ">", bg = "white", relief = FLAT, cursor = "hand2")
         label_page = Label(frame_page, text = str(current_page) + "/" + str(page_amount), bg = "white")
@@ -535,55 +696,78 @@ class GUI():
             button_left.bind("<Button-1>", self.project_left)
             button_right.bind("<Button-1>", self.project_right)
         
-        frame_page.grid(row = 16, column = 0, columnspan = 2, sticky = E+W)
+        frame_page.grid(row = 8, column = 0, columnspan = 2, sticky = E+W+S+N)
         button_left.grid(row = 0, column = 0, sticky = W)
         button_right.grid(row = 0, column = 2, sticky = E)
         label_page.grid(row = 0, column = 1)
-
-
-    
+      
+        
+        
+        
     def log_in(self, event):
         username = self.entry_username.get()
         password = self.entry_password.get()
-        for id in self.users_id:
-            user = self.create_user(id)
-            if(username == user.get_username() and password == user.get_password()):
-                self.set_up_overlay_profile(user)
-                self.frame_user_login_input.grid_forget()
-                self.logged_in_user = user
-                if self.frame_current == self.frame_profile:
+        users = read_rows("user_db")
+        for user in users:
+            if user["username"] == self.entry_username.get():
+                user2 = get_row("user_db", user["id"])
+                if(user2["password"] == self.entry_password.get()):
+                    self.set_up_overlay_profile(user)
+                    self.frame_user_login_input.grid_forget()
+                    self.logged_in_user = user
                     self.project_index = 0
-                    self.set_up_profile()
-                break
+                    if self.frame_current == self.frame_profile and self.profile_type == 0:
+                        self.set_up_profile()
+                    elif self.frame_current == self.frame_profile and self.profile_type == 1:
+                        self.set_up_team_profile()
+                    break
         self.entry_username.delete(0,"end")
         self.entry_password.delete(0,"end")
     
     def log_out(self,event):
         self.frame_logged_in.grid_forget()
-        empty = User()
-        self.logged_in_user = empty
+        self.logged_in_user = {"id" : "Nan", "name": "", "interest": "", "team_id" : -1} 
         self.proflie_state = 0
         self.logged_in_id = 0
         self.project_index = 0
-        if self.frame_current == self.frame_profile:
+        if self.frame_current == self.frame_profile and self.profile_type == 0:
             self.set_up_profile()
+        elif self.frame_current == self.frame_profile and self.profile_type == 1:
+            self.set_up_team_profile()
         self.frame_user_login_input.grid(row = 0, column = 3)
 
 
     def edit_button(self,event):
         self.proflie_state = 1
-        self.set_up_profile()
+        if self.profile_type == 0:
+            self.set_up_profile()
+        elif self.profile_type == 1:
+            self.set_up_team_profile()
+    
         
     def save_button(self, event):
         self.proflie_state = 0
-        user = self.profile_user
-        user.set_name(self.profile_name_entry.get())
-        user.set_bio(self.proflie_bio_entry.get())
-        user.set_password(self.profile_password_entry.get())
-        self.user_table.update(self.logged_in_user.get_id(), self.logged_in_user.get_dictonary())
-        self.user_table.load()
-        self.set_up_profile()
-        self.set_up_overlay_profile(self.logged_in_user)
+        if self.profile_type == 0:
+            self.logged_in_user["name"] = self.profile_name_entry.get()
+            self.logged_in_user['interest'] = self.proflie_bio_entry.get("1.0",END)
+            self.logged_in_user["password"] = self.profile_password_entry.get()
+            self.logged_in_user["resume"] = self.proflie_resume_text_box.get("1.0",END)
+            self.profile_user = self.logged_in_user
+            set_row("user_db", self.logged_in_user)
+            self.set_up_profile()
+            self.set_up_overlay_profile(self.logged_in_user)
+        elif self.profile_type == 1:
+            self.profile_team["name"] = self.profile_name_entry.get()
+            self.profile_team['desc'] = self.proflie_bio_entry.get("1.0",END)
+            set_row("team_db", self.profile_team)
+            self.set_up_team_profile()
+            
+    def cancel_button(self, event):
+        self.proflie_state = 0
+        if self.profile_type == 0:
+            self.set_up_profile()
+        elif self.profile_type == 1:
+            self.set_up_team_profile()
 
     def deposit_button(self, event):
         self.proflie_state = 3
@@ -591,8 +775,8 @@ class GUI():
     
     def deposit_accept_button(self, event):
         self.proflie_state = 0
-        self.logged_in_user.deposit(int(self.profile_cash_amount_entry.get()))
-        self.user_table.update(self.logged_in_user.get_id(), self.logged_in_user.get_dictonary())
+        self.profile_user["balance"] = self.logged_in_user["balance"] = self.logged_in_user["balance"] + int(self.profile_cash_amount_entry.get())
+        set_row("user_db", self.logged_in_user)
         self.set_up_profile()
         
     def withdraw_button(self, event):
@@ -601,12 +785,9 @@ class GUI():
     
     def withdraw_accept_button(self, event):
         self.proflie_state = 0
-        self.logged_in_user.withdraw(int(self.profile_cash_amount_entry.get()))
-        self.user_table.update(self.logged_in_user.get_id(), self.logged_in_user.get_dictonary())
-        self.set_up_profile()
-    
-    def cancel_button(self, event):
-        self.proflie_state = 0
+        if self.logged_in_user["balance"] - int(self.profile_cash_amount_entry.get()) > 0:
+            self.profile_user["balance"] = self.logged_in_user["balance"] = self.logged_in_user["balance"] - int(self.profile_cash_amount_entry.get())
+            set_row("user_db", self.logged_in_user)
         self.set_up_profile()
         
     def quit_button(self, event):
@@ -616,31 +797,70 @@ class GUI():
         self.set_up_profile()
         
     def project_left(self, event):
-        self.project_index -= 3
-        self.set_up_profile()
+        if self.profile_type == 0:
+            self.project_index -= 3
+            self.set_up_profile()
+        elif self.profile_type == 1:
+            self.project_index -= 8
+            self.set_up_team_profile()
         
     def project_right(self, event):
-        self.project_index += 3
-        self.set_up_profile()
+        if self.profile_type == 0:
+            self.project_index += 3
+            self.set_up_profile()
+        elif self.profile_type == 1:
+            self.project_index += 8
+            self.set_up_team_profile()
         
     def create_button(self,event, arg1, arg2, arg3, arg4):
         print(arg2)
         
+        
+    def promote_button(self, event, id):
+        ezcommands.promote(self.profile_team, id)
+        self.set_up_team_profile()
+
+        
+    def demote_button(self, event, id):
+        ezcommands.demote(self.profile_team, id)
+        self.set_up_team_profile()
+    
+        
+    def kick_button(self, event, id):
+        ezcommands.kick(self.profile_team, id)
+        self.set_up_team_profile()
+    
+    def request_join_team_button(self, event, id):
+        self.logged_in_user = ezcommands.request_join(self.profile_team, id)
+        self.set_up_team_profile()
+        
+    def accept_team_button(self, event, id):
+        ezcommands.accept_team(self.profile_team, id)
+        self.set_up_team_profile()
+        
+    def reject_team_button(self, event, id):
+        ezcommands.reject_team(self.profile_team, id)
+        self.set_up_team_profile()
+        
     def home_button(self,event):
+        self.proflie_state = 0
         self.set_up_top_user_chart()
         self.project_index = 0
         
     def profile_button(self,event, user):
+        self.proflie_state = 0
         self.profile_user = user
         self.set_up_profile()
         
-    def project_button(self, event, project):
-        self.profile_project = project
-        #self.set_up_project_frame()
+    def project_button(self, event, project_id):
+        self.proflie_state = 0
+        self.profile_project = get_row("project_db", project_id)
+        self.set_up_project_profile()
         
-    def team_button(self, event, project):
-        self.profile_project = project
-        #self.set_up_project_frame()
- 
+    def team_button(self, event, team):
+        self.proflie_state = 0
+        self.profile_team = team
+        self.set_up_team_profile()
+        
 start = GUI()
 start.origin.mainloop()
