@@ -11,6 +11,7 @@ import numpy
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+img_folder = os.getcwd()+"/images"
 
 ##########################################################################
 ##########################################################################
@@ -89,10 +90,10 @@ Helper functions
 	is_admin(dic): returns true if user is team admin
 	promote(team_dict, user_id): user becomes admin in team
 	demote(team_dict, user_id): admin becomes user
-	get_files(src, file = None, dst = os.getcwd(), username = None,
-		init_path = "C:/Users/username/Desktop"):
 		will either return available files if file not stated
-		else copies a new file from folder to folder''')
+	set_pic(src, user_id = None, image_name = None, dst = img_folder):
+		will either return available files if file not stated
+		else copies a new pic from folder to folder''')
 #############################################################################
 
 #/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\
@@ -762,28 +763,47 @@ def demote(team_dict, user_id):
    team_dict["admin_ids"].remove(user_id)
    set_row("team_db", team_dict)
   
-#cond:  if file is not defined, it will just print what is in the path
-#		if file is defined we copy the file to to_path
+#cond:  if picture is not defined, it will just print what is in the path
+#		if picture is defined we proceed to copy image
 #		if username is defined, we use the init_path
-#       if to_path does not exist, it will create it
+#       if dst does not exist, it will create it
+#		if a file exist it will rename it
+#		if the user had a picture it will remove it
 #pre: needs valid path
 #post: will either return available files if file not stated
-#   else copies a new file
-def get_files(src, file = None, dst = os.getcwd(), username = None, init_path = "C:/Users/username/Desktop"):
-	#if a username is defined use it as a initial_path, so path = initial_path + path
-	if username:
-		init_path = init_path.replace("username", username)
-		src = init_path+"/"+src
-	#if only path it will print availble files
-	if not file:
-		list = os.listdir(src)
-		print (list)
-		return list
-	if not os.path.exists(os.path.join(src,file)):
-		print("The file path:", os.path.join(src,file), "does not exist")
-		return "Nan"
-	if not os.path.exists(dst):
-		print("Directory does not exist, so making a new one")
-		os.mkdir(dst)
-	print("File copied")
-	return shutil.copy(os.path.join(src, file), dst)
+#   else return success/failure message
+def set_pic(src, user_id = None, image_name = None, dst = img_folder):
+    new_name = image_name
+    path = os.path.join(src, image_name)
+    #if only path it will print availble files
+    if not user_id:
+        list = os.listdir(src)
+        print (list)
+        return list
+    #check file path exist to image
+    if not os.path.exists(path):
+        return "The file path:", path, "does not exist."
+    #if dst does not exist, it will create it	
+    if not os.path.exists(dst):
+        print(dst + " does not exist, so making a new one")
+        os.mkdir(dst)
+    #if the user had a picture it will remove it
+    pic = jsonIO.get_value("user_db", user_id, "pic")
+    if pic:
+        os.remove(os.path.join(dst, pic))
+    #if image exist in folder rename to (1)
+    if os.path.exists(os.path.join(dst, image_name)):
+        n = 1
+        new_name += "(" + str(n) + ")"
+        #if still exist, keep incrementing number
+        while os.path.exists(os.path.join(dst, new_name)):
+            n += 1
+            new_name = image_name + "(" + str(n) + ")"
+        #copies the renamed image to images folder
+        shutil.copy(path, os.path.join(dst, new_name))
+    else:
+        #copies the image to images folder
+        shutil.copy(path, dst)
+    #set the name in the database
+    jsonIO.set_value("user_db", user_id, "pic", new_name)
+    return "File copied"
