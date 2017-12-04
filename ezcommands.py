@@ -43,9 +43,7 @@ SU
 		user_type, status, warning, and balance
 	verify(username, password = ""): returns [case number, user, message]
 	*not made*project_completion : decides what to do after project is completed
-		users rate each other:
-				what to do with bid money
-				blaklist users
+		what to do with bid money
 		and other modifications
 	quit_request: user is removed and will call quit_team
 	quit_team: doesnt matter if admin or user, but will kick devs if he's last admin
@@ -56,11 +54,9 @@ Class creation
 	register_user(name, username, password, user_type, deposit):
 		places new temp_user in SU tasks
 	create_bid(project_id, end_date, initial_bid, start_date = now):
-	
 	create_project(client_id, title, desc, deadline):
 		will return and make a new project
 	create_bid(project_id, end_date, initial_bid, start_date = now): returns a new bid
-	*not made*create_issue()
 -------------------------------------------------------------------------------------
 Special functions
 	project_fund_transfer(from_user_id, to_user_id, amount): it will modify both 
@@ -75,11 +71,11 @@ Special functions
 	*not made*start_bid
 	*not made*bid_process
 	*not made*end_bid: make needed modifications such as penalty or set_team_id
-	*not made*rate
+	*not made*make_rating(user_id, rating)
 -------------------------------------------------------------------------------------
 Metrics
-	get_grade(obj,user,dic=false): returns the average rating of dev, team, or client
-	get_total_commision(obj,user,dic=false): returns the money made 
+	get_grade(obj,user_type,dic=false): returns the average rating of dev, team, or client
+	get_total_commision(obj,dic=false): returns the money made 
 		by all projects from user/ team
 -------------------------------------------------------------------------------------
 Helper functions
@@ -596,25 +592,25 @@ def reject_team(team_dict, user_id):
 #      client avg (client, "client")
 #pre: id must exists for all 
 #post: return average rate
-def get_grade(obj, user, dict = False):
+def get_grade(obj, user_type, dict = False):
 	grade = []
-	user+="_rating"
+	user_type+="_rating"
 	#grade for class
 	if not dict:
-		if ((obj.get_user_type() == "client" and user == "client") or 
-			(obj.get_user_type() != "client"  and user == "team")):
+		if ((obj.get_user_type() == "client" and user_type == "client") or 
+			(obj.get_user_type() != "client"  and user_type == "team")):
 			for id in obj.get_project_ids():
-				grade.append(jsonIO.get_value("project_db", id, user))
+				grade.append(jsonIO.get_value("project_db", id, user_type))
 		else:
-			print ("Use types don't match")
+			print ("User types don't match")
 	#grade for dict
 	else:
-		if ((obj["get_user_type"] == "client" and user == "client") or 
-			(obj["get_user_type"] != "client"  and user == "team")):
+		if ((obj["get_user_type"] == "client" and user_type == "client") or 
+			(obj["get_user_type"] != "client"  and user_type == "team")):
 			for id in obj["project_ids"]:
-				grade.append(jsonIO.get_value("project_db", id, user))
+				grade.append(jsonIO.get_value("project_db", id, user_type))
 		else:
-			print ("Use types don't match")
+			print ("User types don't match")
 	#if rate exist return something
 	if grade:
 		return round(numpy.mean(grade), 2)
@@ -719,6 +715,19 @@ def tranfer_funds(from_user_id, to_user_id, amount):
 	to_user.deposit(amount)
 	return 1
 
+def get_bid_log(project_id, only_id = False):
+	bid_id = jsonIO.get_value("project_db", project_id, "bid_id")
+	if bid_id == None:
+		print("Bid not found")
+		return []
+	bid_log = jsonIO.get_value("bid_db", bid_id, "bid_log")
+	if not bid_log or bid_log == [[]]:
+		print("Bid log is empty")
+		return []
+	if only_id:
+		return bid_log[0][1]
+	else:
+		return bid_log
 #pre: user must exist
 #pro: check if user is active
 def is_in_active_project(user):

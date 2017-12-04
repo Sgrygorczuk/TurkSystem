@@ -34,7 +34,7 @@ class User:
 		#user_db
 		self.user_type = user_type #dev, client, SU
 		self.balance = balance #must be positive
-		self.status = status #(active, blacklisted, temp, rejected)
+		self.status = status #(active, blacklisted, temp, rejected, inactive)
 		self.warning = warning
 		#userInfo
 		self.resume = resume
