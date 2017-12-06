@@ -35,7 +35,7 @@ prj_folder = os.getcwd()+"/projects"
 #post: prints all available commands
 def get_commands():
 	print ('''-------------------------------------------------------------------------------------
-Direct Database access
+Direct Database Access
 	get_value(obj, key, id = 'Nan'): gets value
 	get_all_db(obj): gets all from db
 	get_row(obj, key): gets an entire row
@@ -46,14 +46,12 @@ SU
 	user_report(user, id = 'Nan'): returns status of the user:
 		user_type, status, warning, and balance
 	verify(username, password = ""): returns [case number, user, message]
-	*not made*finalize_bid : decides what to do after project is completed
-		what to do with bid money
-		and other modifications
+	
 	quit_request: user is removed and will call quit_team
 	quit_team: doesnt matter if admin or user, but will kick devs if he's last admin
 		and update their team_ids
 -------------------------------------------------------------------------------------
-Class creation
+Class Creation
 	user_exists(username): returns 1 if user exist else returns 0
 	register_user(name, username, password, user_type, deposit):
 		places new temp_user in SU tasks
@@ -61,10 +59,10 @@ Class creation
 	create_project(client_id, title, desc, deadline):
 		will return and make a new project
 	create_bid(project_id, end_date, initial_bid, start_date = now): returns a new bid
+	set_pic(src, new_img, user_id, user_type): will make/ upadate user's pic
+	get_pic(user_id, user_type): either error message or returns path of image
 -------------------------------------------------------------------------------------
-Special functions
-	project_fund_transfer(from_user_id, to_user_id, amount): it will modify both 
-		 balances and create task. Check below for more details.
+Teams
 	erase_empty_team(team_id): will delete team if there is no admin and return true
 		will also kick developers out and update their team_id to 'Nan'
         else it will return false
@@ -72,9 +70,24 @@ Special functions
 	request_join(team_dict, user_id):  will add user to the team and update team's dev_ids
 	accept_team(team_dict, user_id): user's team_id will be updated and team's request list will shrink
 	reject_team(team_dict, user_id): team's request list will shrink
+	promote(team_dict, user_id): user becomes admin in team
+	demote(team_dict, user_id): admin becomes user
+		will either return available files if file not stated
+-------------------------------------------------------------------------------------
+Bid and Project Process
+	bid_timeout(bid_id): returns if the bid was over with 1 otherwise 0
+	choose_bid(bid_id, dev_id, reason = "lowest bidder"): modifies bid_db and changes states
+	get_chosen_bid(project_id, only_id = False): gets bid_log of winner bidder
+	project_fund_transfer(from_user_id, to_user_id, amount): it will modify both 
+		 balances and create task. Check below for more details.
+	def finalize_funds(project_id): transfers the remaining funds after the 
+		completion/ incompletion of project
 	*not made*make_bid: first check if project == "bidding" -> call bid
 	*not made*end_bid: make needed modifications such as penalty or set_team_id
 	*not made*make_rating(user_id, rating)
+	submit(src, new_project, project_id): will make/ update project
+		if exist, it will no longer allow submission
+	get_submission(dst, project_id): either error message or returns project
 -------------------------------------------------------------------------------------
 Metrics
 	get_grade(obj,user_type,dic=false): returns the average rating of dev, team, or client
@@ -89,21 +102,11 @@ Helper functions
 	datetime_to_string(dt_time): returns string form
 	get_n_days_later(time, n): return string with added days 
 	tranfer_funds(from_user, to_user, amount): it will modify both balances
-	get_chosen_bid(project_id, only_id = False): gets bid_log of winner bidder
 	is_in_active_project(user): check if user is active
 	is_admin(dic): returns true if user is team admin
-	promote(team_dict, user_id): user becomes admin in team
-	demote(team_dict, user_id): admin becomes user
-		will either return available files if file not stated
-	bid_timeout(bid_id): returns if the bid was over with 1 otherwise 0
-	set_project(src, new_project, project_id): will make/ update project
-		if exist, it will no longer allow submission
-	set_pic(src, new_img, user_id, user_type): will make/ upadate user's pic
 	set_file(src, new_file = None, dst = None, old_file = None, obj_id = None, obj_type = None):
 		will either return available files if file not stated
-		else return success/failure message
-	get_pic(user_id, user_type): either error message or returns path of image
-	get_project(dst, project_id): either error message or returns project''')
+		else return success/failure message''')
 
 #############################################################################
 
@@ -491,46 +494,31 @@ def create_bid(project_id, end_date, initial_bid, start_date = now):
 	if s_date >= e_date:
 		return "The end date must be after the start date"
 	return Bid(project_id, [start_date, user["id"], initial_bid, end_date])
-	
-	
-#/\/\/\/\SPECIAL FUNCTIONS/\/\/\/\SPECIAL FUNCTIONS/\/\/\/\SPECIAL FUNCTIONS/\/\/\/\ 
 
-#cond: this is called at the beginning after the bid is done
-#      the SU will withdraw the money and take 10% then give
-#      half of the money to the team, and will add to SU issues.
-#      It will be set as resolved, and set as unresolved when
-#      the team submits their work or until the deadline.
-#pre: from, to users exist and amount exists and is valid
-#post: it will modify both balances and create issue.
-def project_fund_transfer(from_user_id, to_user_id, amount):
-	from_user = User()
-	to_user = User()
-	from_user.load_db(from_user_id)
-	to_user.load_db(to_user_id)
-	if amount <= 0:
-		return "Must have a positive amount"
-	if from_user.get_id() == 'Nan':
-		print("The user you are grabbing from does not exist")
-		return 'Nan'
-	if (to_user.get_id() == 'Nan' or to_user.get_status() == "blacklisted" or
-		to_user.get_status() == "inactive" or to_user.get_status() == "rejected"):
-		return "The user you are sending to does not exist"
-	if from_user.get_balance() < amount:
-		return "The user does not have enough funds"
-	if not from_user.get_project_ids:
-		return "The client has not initiated a project"
-	#create a new Issue after money transfers
-	from_user.withdraw(amount)
-	#take 10% and take 50% until completion of project
-	deduction = round(amount*.1*.5, 2)
-	amount -= deduction
-	#keep it in superuser's bank
-	su_balance = jsonIO.get_value("user_db", 0, "balance") + deduction
-	jsonIO.set_value("user_db", 0, "balance", su_balance)
-	to_user.deposit(amount)
-	#create a new issue to retrieve the other 40% = 50%-10# fee
-	return Issue(from_user.get_project_ids[-1], "new project", True)
+#pre: 	src is destination of the user's file 
+#		user_type is either team or user
+#		new_img is the name of the file
+#post:	will make/ upadate user's pic
+def set_pic(src, new_img, user_id, user_type):
+    if user_type == "team":
+        pic = jsonIO.get_value("team_db", user_id, "pic")
+    else:
+        pic = jsonIO.get_value("user_db", user_id, "pic")
+	#uses helper function
+    return set_file(src, new_img, img_folder, pic, user_id, user_type)
+
+#pre:	image must exist
+#post:	either error message or returns path of image
+def get_pic(user_id, user_type):	
+	if user_type == "team":
+		pic = jsonIO.get_value("team_db", user_id, "pic")
+	else:
+		pic = jsonIO.get_value("user_db", user_id, "pic")
+	return os.path.join(img_folder, pic)
+
 	
+#/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\
+
 #cond: will erase if there is no admin and return a truth
 #pre: the team_id is valid
 #post: will delete team if there is no admin and return true
@@ -599,6 +587,187 @@ def reject_team(team_dict, user_id):
 	set_row("user_db", user)
 	set_row("team_db", team_dict)
 
+#post: user becomes admin in team
+def promote(team_dict, user_id):
+   team_dict["admin_ids"].append(user_id)
+   set_row("team_db", team_dict)
+
+#post: admin becomes user
+def demote(team_dict, user_id):
+   team_dict["admin_ids"].remove(user_id)
+   set_row("team_db", team_dict)
+ 
+	
+#/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\
+
+#post: returns if the bid was over with 1 otherwise 0
+def bid_timeout(bid_id):
+	project = jsonIO.get_row("project_db", bid_id)
+	if not project:
+		print("No such id exist")
+		return 0
+	#project must be in a bidding state
+	if project["status"] != "bidding":
+		return 0
+	#calls helper function
+	now = get_now()
+	if string_to_datetime(project["bid_end_date"]) <= now:
+		return 1
+	else:
+		return 0
+
+#pre:	dev_id must exist in bid_log and must have reason if not lowest
+#post:	modifies bid_db, project and changes project state to active
+def choose_bid(bid_id, dev_id, reason = "lowest bidder"):
+	bid = jsonIO.get_row("bid_db", bid_id)
+	if not bid:
+		print("Bid does not exist")
+		return ""
+	#if the bidder chosen was the lowest and default reason
+	if dev_id == bid["bid_log"][-1][1]:
+		bid["chosen_index"] = len(bid["bid_log"])-1
+		print(bid)
+	#check if reason was given
+	else:
+		if reason == "lowest bidder":
+			return "please give a valid reason"
+		else:
+			#find the index of the lowest 
+			for j in range(len(bid["bid_log"])-1, 0, -1):
+				if bid["bid_log"][j][1] == dev_id:
+					bid["chosen_index"] = j
+					j = len(bid["bid_log"])-1
+	bid["client_review"] = reason
+	jsonIO.set_row("bid_db", bid)
+	jsonIO.set_value("project_db", bid_id, "status", "active")
+	return "Done"
+
+#post:	returns the bid_log of the chosen bid
+#		if only_id = True we only return the winner's id
+def get_chosen_bid(project_id, only_id = False):
+	chosen_index = jsonIO.get_value("project_db", project_id, "chosen_index")
+	if chosen_index == None:
+		print("Bidder was not yet chosen")
+		return []
+	bid_log = jsonIO.get_value("bid_db", bid_id, "bid_log")
+	if not bid_log or bid_log == [[]]:
+		print("Bid log is empty")
+		return []
+	if only_id:
+		return bid_log[chosen_index][1]
+	else:
+		return bid_log[chosen_index]
+
+#cond: this is called at the beginning after the bid is done
+#      the SU will withdraw the money and take 10% then give
+#      half of the money to the team, and will add to SU issues.
+#      It will be set as resolved, and set as unresolved when
+#      the team submits their work or until the deadline.
+#pre: from, to users exist and amount exists and is valid
+#post: it will modify both balances and create issue.
+def project_fund_transfer(from_user_id, to_user_id, amount):
+	from_user = User()
+	to_user = User()
+	from_user.load_db(from_user_id)
+	to_user.load_db(to_user_id)
+	if amount <= 0:
+		return "Must have a positive amount"
+	if from_user.get_id() == 'Nan':
+		print("The user you are grabbing from does not exist")
+		return 'Nan'
+	if (to_user.get_id() == 'Nan' or to_user.get_status() == "blacklisted" or
+		to_user.get_status() == "inactive" or to_user.get_status() == "rejected"):
+		return "The user you are sending to does not exist"
+	if from_user.get_balance() < amount:
+		return "The user does not have enough funds"
+	if not from_user.get_project_ids:
+		return "The client has not initiated a project"
+	#create a new Issue after money transfers
+	from_user.withdraw(amount)
+	#take 10% and take 50% until completion of project
+	deduction = round(amount*.1*.5, 2)
+	amount -= deduction
+	#keep it in superuser's bank
+	su_balance = jsonIO.get_value("user_db", 0, "balance") + deduction
+	jsonIO.set_value("user_db", 0, "balance", su_balance)
+	to_user.deposit(amount)
+	#create a new issue to retrieve the other 40% = 50%-10# fee
+	return Issue(from_user.get_project_ids[-1], "new project", True)
+
+#pre:	must have a valid bid and project must be complete
+#post:	transfers the remaining funds after the completion/ incompletion of project
+def finalize_funds(project_id):
+    project = jsonIO.get_row("project_db", project_id)
+    if not project:
+        print("Project does not exist")
+        return 0
+    if project["status"] != "incomplete" and project["status"] != "complete":
+        print("Project was not set to complete or incomplete")
+        return 0
+    bid_log = ez.get_chosen_bid(project_id)
+    if bid_log == []:
+        print("Bid log does not exist")
+        return 0
+    amount = bid_log[2]
+    #take 10% and take 50% until completion of project
+    deduction = round(amount*.1*.5, 2)
+    amount -= deduction
+    #send back the money to client if incomplete
+    if project["status"] == "incomplete":
+        print("Project was incomplete so penalizing")
+        transfer_funds(bid_log[1], project["client"], amount)
+        transfer_funds(0, project["client"], deduction)
+        return 1
+    #if rating was lower than 3 talk to client to decide
+    if project["client_rating"] < 3:
+        print("Rating was less than 3 needs to talk to client")
+        return -1
+    #else if complete send dev the money
+    transfer_funds(0, bid_log[1], deduction)
+    print("Tranfer of funds to dev is complete")
+    return 1
+#pre: 	src is destination of the user's file 
+#		new_project is the name of the file
+#post:	will make/ update project
+#		if exist, it will no longer allow submission
+def submit(src, new_project, project_id):
+    if jsonIO.get_value("project_db", project_id, "submission"):
+        return "User has already submitted a project"
+    return set_file(src, new_project, prj_folder, None, project_id, "project") 	
+	
+#pre:	project must exist and path must be valid
+#post:	either error message or returns project
+def get_submission(dst, project_id):
+	project = jsonIO.get_value("project_db", project_id, "submission")
+	if not project:
+		return "Project has not been submitted yet"
+	#check file path exist to image
+	if not os.path.exists(dst):
+		return "The file path: " + dst + " does not exist."
+	#if file exist in folder rename to (1)
+	path = os.path.join(prj_folder, project)
+	if not os.path.exists(path):
+		return "We couldn't find project in our database, contact admin"
+	new_name = project
+	if os.path.exists(os.path.join(dst, new_name)):
+		n = 1
+		new_name += "(" + str(n) + ")"
+		#if still exist, keep incrementing number
+		while os.path.exists(os.path.join(dst, new_name)):
+			n += 1
+			new_name = new_file + "(" + str(n) + ")"
+		#copies the renamed file to file folder
+		shutil.move(path, os.path.join(dst, new_name))
+	else:
+		#copies the file to file folder
+		shutil.move(path, dst)
+	#remove the project from the database
+	jsonIO.set_value("project_db", project_id, "submission", "")
+	if os.path.exists(path):
+		os.remove(path)
+	return path	
+
+	
 #/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\
 #cond: dev    avg (dev,"team")
 #      team   avg (team,"team")
@@ -730,20 +899,6 @@ def tranfer_funds(from_user_id, to_user_id, amount):
 	to_user.deposit(amount)
 	return 1
 
-def get_chosen_bid(project_id, only_id = False):
-	chosen_index = jsonIO.get_value("project_db", project_id, "chosen_index")
-	if chosen_index == None:
-		print("Bidder was not yet chosen")
-		return []
-	bid_log = jsonIO.get_value("bid_db", bid_id, "bid_log")
-	if not bid_log or bid_log == [[]]:
-		print("Bid log is empty")
-		return []
-	if only_id:
-		return bid_log[chosen_index][0]
-	else:
-		return bid_log[chosen_index]
-
 #pre: user must exist
 #pro: check if user is active
 def is_in_active_project(user):
@@ -767,52 +922,6 @@ def is_admin(dict):
 	   for admin in team["admin_ids"]:
 		   if dict["id"] == admin:
 			   return True
-
-#post: user becomes admin in team
-def promote(team_dict, user_id):
-   team_dict["admin_ids"].append(user_id)
-   set_row("team_db", team_dict)
-
-#post: admin becomes user
-def demote(team_dict, user_id):
-   team_dict["admin_ids"].remove(user_id)
-   set_row("team_db", team_dict)
- 
-#post: returns if the bid was over with 1 otherwise 0
-def bid_timeout(bid_id):
-	project = jsonIO.get_row("project_db", bid_id)
-	if not project:
-		print("No such id exist")
-		return 0
-	#project must be in a bidding state
-	if project["status"] != "bidding":
-		return 0
-	#calls helper function
-	now = get_now()
-	if string_to_datetime(project["bid_end_date"]) <= now:
-		return 1
-	else:
-		return 0
- 
-#pre: 	src is destination of the user's file 
-#		new_project is the name of the file
-#post:	will make/ update project
-#		if exist, it will no longer allow submission
-def set_project(src, new_project, project_id):
-    if jsonIO.get_value("project_db", project_id, "submission"):
-        return "User has already submitted a project"
-    return set_file(src, new_project, prj_folder, None, project_id, "project") 
-	
-#pre: 	src is destination of the user's file 
-#		user_type is either team or user
-#		new_img is the name of the file
-#post:	will make/ upadate user's pic
-def set_pic(src, new_img, user_id, user_type):
-    if user_type == "team":
-        pic = jsonIO.get_value("team_db", user_id, "pic")
-    else:
-        pic = jsonIO.get_value("user_db", user_id, "pic")
-    return set_file(src, new_img, img_folder, pic, user_id, user_type)
 
 #cond:  if obj_id is not defined, it will just print what is in the path
 #		if obj_id is defined we proceed to copy obj
@@ -864,44 +973,3 @@ def set_file(src, new_file = None, dst = None, old_file = None, obj_id = None, o
     else:
         jsonIO.set_value("user_db", obj_id, "pic", new_name)
     return "File copied"
-
-#pre:	image must exist
-#post:	either error message or returns path of image
-def get_pic(user_id, user_type):	
-	if user_type == "team":
-		pic = jsonIO.get_value("team_db", user_id, "pic")
-	else:
-		pic = jsonIO.get_value("user_db", user_id, "pic")
-	return os.path.join(img_folder, pic)
-
-#pre:	project must exist and path must be valid
-#post:	either error message or returns project
-def get_project(dst, project_id):
-	project = jsonIO.get_value("project_db", project_id, "submission")
-	if not project:
-		return "Project has not been submitted yet"
-	#check file path exist to image
-	if not os.path.exists(dst):
-		return "The file path: " + dst + " does not exist."
-	#if file exist in folder rename to (1)
-	path = os.path.join(prj_folder, project)
-	if not os.path.exists(path):
-		return "We couldn't find project in our database, contact admin"
-	new_name = project
-	if os.path.exists(os.path.join(dst, new_name)):
-		n = 1
-		new_name += "(" + str(n) + ")"
-		#if still exist, keep incrementing number
-		while os.path.exists(os.path.join(dst, new_name)):
-			n += 1
-			new_name = new_file + "(" + str(n) + ")"
-		#copies the renamed file to file folder
-		shutil.move(path, os.path.join(dst, new_name))
-	else:
-		#copies the file to file folder
-		shutil.move(path, dst)
-	#remove the project from the database
-	jsonIO.set_value("project_db", project_id, "submission", "")
-	if os.path.exists(path):
-		os.remove(path)
-	return path

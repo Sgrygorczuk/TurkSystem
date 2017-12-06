@@ -162,7 +162,7 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	user1.add_project_ids(project5.get_id())
 	client4.add_project_ids(project5.get_id())	
 	
-	bid0.new_bid(project_id = project1.get_id(), bid_log = [[now, client0.get_id(), 1000, later]])
+	bid0.new_bid(project_id = project0.get_id(), bid_log = [[now, client0.get_id(), 1000, later]])
 	bid1.new_bid(project_id = project1.get_id(), bid_log = [[now, client0.get_id(), 1000, later]])
 	bid2.new_bid(project_id = project2.get_id(), bid_log = [[now, client0.get_id(), 1000, later]])
 	bid3.new_bid(project_id = project3.get_id(), bid_log = [[now, client0.get_id(), 1000, later]])
