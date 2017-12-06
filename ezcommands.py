@@ -89,7 +89,12 @@ Bid and Project Process
 		if exist, it will no longer allow submission
 	get_submission(dst, project_id): either error message or returns project
 -------------------------------------------------------------------------------------
+Engines
+	search_matches(obj, input_name): Uses the search engine to find name
+	*not made*rank(): Ranks first three, will use bayesian to accomplish that
+-------------------------------------------------------------------------------------
 Metrics
+	*not made*bayesian(): returns the bayesian calculation
 	get_grade(obj,user_type,dic=false): returns the average rating of dev, team, or client
 	get_total_commision(obj,dic=false): returns the money made 
 		by all projects from user/ team
@@ -768,6 +773,28 @@ def get_submission(dst, project_id):
 	return path	
 
 	
+#/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\
+#post: Uses the search engine to find name
+def search_matches(obj, input_name):
+    matches = []
+    if obj.get_all() == Project().get_all():
+        names = get_col(Project(), "title")
+    else:
+        names = get_col(obj, "name")
+    if input_name == "":
+        for name in names:
+            matches.append(name["id"])
+    else:
+        for name in names:
+            if obj.get_all() == Project().get_all():
+                if name["title"] == input_name:
+                    matches.append(name["id"]) 
+            else: 
+                if name["name"] == input_name:
+                    matches.append(name["id"])
+    return matches	
+	
+	
 #/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\
 #cond: dev    avg (dev,"team")
 #      team   avg (team,"team")
@@ -835,24 +862,6 @@ def get_grade_team(dict):
         grade = round(grade,1)
     return grade 
     
-def search_matches(obj, input_name):
-    matches = []
-    if obj.get_all() == Project().get_all():
-        names = get_col(Project(), "title")
-    else:
-        names = get_col(obj, "name")
-    if input_name == "":
-        for name in names:
-            matches.append(name["id"])
-    else:
-        for name in names:
-            if obj.get_all() == Project().get_all():
-                if name["title"] == input_name:
-                    matches.append(name["id"]) 
-            else: 
-                if name["name"] == input_name:
-                    matches.append(name["id"])
-    return matches
 	
 #cond: dev    total (dev)
 #      team   total (team)
