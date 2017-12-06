@@ -774,7 +774,7 @@ def get_submission(dst, project_id):
 #      client avg (client, "client")
 #pre: id must exists for all 
 #post: return average rate
-def get_grade(obj, user_type, dict = False):
+def get_grad(obj, user_type, dict = False):
 	grade = []
 	user_type+="_rating"
 	#grade for class
@@ -797,6 +797,62 @@ def get_grade(obj, user_type, dict = False):
 	if grade:
 		return round(numpy.mean(grade), 2)
 	return 'Nan'
+	
+def get_grade(dict):
+    grade = 0 
+    if len(dict["project_ids"]) > 0:
+        for project in dict["project_ids"]:
+            p = jsonIO.get_row("project_db", project)
+            if not is_in_active_project(dict):
+                if dict["user_type"] == "dev":
+                    grade += p['team_rating']
+                else: 
+                    grade += p['client_rating'] 
+        if is_in_active_project(dict):
+            if  (len(dict["project_ids"]) - 1) == 0:
+                 return 0
+            else:
+                grade /= (len(dict["project_ids"]) - 1)
+        else:
+            grade /= len(dict["project_ids"])
+        grade = round(grade,1)
+    return grade 
+
+def get_grade_team(dict):
+    grade = 0 
+    if len(dict["project_ids"]) > 0:
+        for project in dict["project_ids"]:
+            if not is_in_active_project(dict):
+                p = jsonIO.get_row("project_db", project)
+                grade += p['team_rating']
+        if is_in_active_project(dict):
+            if  (len(dict["project_ids"]) - 1) == 0:
+                 return 0
+            else:
+                grade /= (len(dict["project_ids"]) - 1)
+        else:
+            grade /= len(dict["project_ids"])
+        grade = round(grade,1)
+    return grade 
+    
+def search_matches(obj, input_name):
+    matches = []
+    if obj.get_all() == Project().get_all():
+        names = get_col(Project(), "title")
+    else:
+        names = get_col(obj, "name")
+    if input_name == "":
+        for name in names:
+            matches.append(name["id"])
+    else:
+        for name in names:
+            if obj.get_all() == Project().get_all():
+                if name["title"] == input_name:
+                    matches.append(name["id"]) 
+            else: 
+                if name["name"] == input_name:
+                    matches.append(name["id"])
+    return matches
 	
 #cond: dev    total (dev)
 #      team   total (team)
