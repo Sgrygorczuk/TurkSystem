@@ -38,7 +38,7 @@ class Project:
 		self.team_rating = team_rating		# team's rating of client
 		self.client_review = client_review	# client's explanation of low rating
 		self.team_review = team_review		# team's explanation of low rating
-		self.status = status 				# inactive-> bidding-> active-> no bid / submitted -> complete, incomplete
+		self.status = status 				# inactive-> bidding->  no bid / active-> incomplete / submitted -> complete
 		if modify_db:
 			jsonIO.set_row(self.db, self.get_all())
 		

@@ -9,9 +9,11 @@ import shutil
 import inspect
 import numpy
 
+
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
 img_folder = os.getcwd()+"/images"
+prj_folder = os.getcwd()+"/projects"
 
 ##########################################################################
 ##########################################################################
@@ -70,7 +72,7 @@ Special functions
 	request_join(team_dict, user_id):  will add user to the team and update team's dev_ids
 	accept_team(team_dict, user_id): user's team_id will be updated and team's request list will shrink
 	reject_team(team_dict, user_id): team's request list will shrink
-	*not made*make_bid: first check if project == "inactive" != active -> call bid
+	*not made*make_bid: first check if project == "bidding" -> call bid
 	*not made*end_bid: make needed modifications such as penalty or set_team_id
 	*not made*make_rating(user_id, rating)
 -------------------------------------------------------------------------------------
@@ -81,8 +83,8 @@ Metrics
 -------------------------------------------------------------------------------------
 Helper functions
 	find_row(db, key, value): returns row of given key value
-	val_print(values): support method for print_table method
-	get_time(): returns current date time in Y-m-d H:M:S form
+	val_print(values): support method for print_table metho
+	get_now(): returns current date time in Y-m-d H:M:S form and updates it
 	string_to_datetime(time): returns datetime form
 	datetime_to_string(dt_time): returns string form
 	get_n_days_later(time, n): return string with added days 
@@ -93,9 +95,16 @@ Helper functions
 	promote(team_dict, user_id): user becomes admin in team
 	demote(team_dict, user_id): admin becomes user
 		will either return available files if file not stated
-	set_pic(src, user_id = None, image_name = None, dst = img_folder):
+	bid_timeout(bid_id): returns if the bid was over with 1 otherwise 0
+	set_project(src, new_project, project_id): will make/ update project
+		if exist, it will no longer allow submission
+	set_pic(src, new_img, user_id, user_type): will make/ upadate user's pic
+	set_file(src, new_file = None, dst = None, old_file = None, obj_id = None, obj_type = None):
 		will either return available files if file not stated
-		else copies a new pic from folder to folder''')
+		else return success/failure message
+	get_pic(user_id, user_type): either error message or returns path of image
+	get_project(dst, project_id): either error message or returns project''')
+
 #############################################################################
 
 #/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\
@@ -667,9 +676,11 @@ def val_print(values):
                 values[j] =  ",".join(str(x) for x in value)
     print (indents.format(*values))
 
-#post: return time now in string
-def get_time():
-	return str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+#post: updates now and returns now
+def get_now():
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+    return now
 	
 #pre: needs String in Y-m-d H:M:S form
 #post: returns datetime form
@@ -766,50 +777,131 @@ def promote(team_dict, user_id):
 def demote(team_dict, user_id):
    team_dict["admin_ids"].remove(user_id)
    set_row("team_db", team_dict)
-  
-#cond:  if picture is not defined, it will just print what is in the path
-#		if picture is defined we proceed to copy image
-#		if username is defined, we use the init_path
-#       if dst does not exist, it will create it
+ 
+#post: returns if the bid was over with 1 otherwise 0
+def bid_timeout(bid_id):
+	project = jsonIO.get_row("project_db", bid_id)
+	if not project:
+		print("No such id exist")
+		return 0
+	#project must be in a bidding state
+	if project["status"] != "bidding":
+		return 0
+	#calls helper function
+	now = get_now()
+	if string_to_datetime(project["bid_end_date"]) <= now:
+		return 1
+	else:
+		return 0
+ 
+#pre: 	src is destination of the user's file 
+#		new_project is the name of the file
+#post:	will make/ update project
+#		if exist, it will no longer allow submission
+def set_project(src, new_project, project_id):
+    if jsonIO.get_value("project_db", project_id, "submission"):
+        return "User has already submitted a project"
+    return set_file(src, new_project, prj_folder, None, project_id, "project") 
+	
+#pre: 	src is destination of the user's file 
+#		user_type is either team or user
+#		new_img is the name of the file
+#post:	will make/ upadate user's pic
+def set_pic(src, new_img, user_id, user_type):
+    if user_type == "team":
+        pic = jsonIO.get_value("team_db", user_id, "pic")
+    else:
+        pic = jsonIO.get_value("user_db", user_id, "pic")
+    return set_file(src, new_img, img_folder, pic, user_id, user_type)
+
+#cond:  if obj_id is not defined, it will just print what is in the path
+#		if obj_id is defined we proceed to copy obj
+#		dst should be either img_folder or prj_folder
+#		obj_type is project, team, or user
+#		old_file is the previous name of the file that the obj had, otherwise it is None
 #		if a file exist it will rename it
-#		if the user had a picture it will remove it
+#		if the obj had a picture it will remove it
 #pre: needs valid path
 #post: will either return available files if file not stated
 #   else return success/failure message
-def set_pic(src, user_id = None, image_name = None, dst = img_folder):
-    new_name = image_name
-    path = os.path.join(src, image_name)
+def set_file(src, new_file = None, dst = None, old_file = None, obj_id = None, obj_type = None):
     #if only path it will print availble files
-    if not user_id:
+    if not obj_id:
         list = os.listdir(src)
         print (list)
         return list
     #check file path exist to image
+    new_name = new_file
+    path = os.path.join(src, new_file)
     if not os.path.exists(path):
-        return "The file path:", path, "does not exist."
+        return "The file path: " + path + " does not exist."
     #if dst does not exist, it will create it	
     if not os.path.exists(dst):
         print(dst + " does not exist, so making a new one")
         os.mkdir(dst)
-    #if the user had a picture it will remove it
-    pic = jsonIO.get_value("user_db", user_id, "pic")
-    if pic:
-        os.remove(os.path.join(dst, pic))
-    #if image exist in folder rename to (1)
-    if os.path.exists(os.path.join(dst, image_name)):
+    #if the user had a old_file it will remove it
+    if old_file:
+        if os.path.exists(os.path.join(dst, old_file)):
+            os.remove(os.path.join(dst, old_file))
+    #if file exist in folder rename to (1)
+    if os.path.exists(os.path.join(dst, new_file)):
         n = 1
         new_name += "(" + str(n) + ")"
         #if still exist, keep incrementing number
         while os.path.exists(os.path.join(dst, new_name)):
             n += 1
-            new_name = image_name + "(" + str(n) + ")"
-        #copies the renamed image to images folder
+            new_name = new_file + "(" + str(n) + ")"
+        #copies the renamed file to file folder
         shutil.copy(path, os.path.join(dst, new_name))
     else:
-        #copies the image to images folder
+        #copies the file to file folder
         shutil.copy(path, dst)
     #set the name in the database
-    jsonIO.set_value("user_db", user_id, "pic", new_name)
+    if obj_type == "project":
+        jsonIO.set_value("project_db", obj_id, "submission", new_name)
+    elif obj_type == "team":
+        jsonIO.set_value("team_db", obj_id, "pic", new_name)
+    else:
+        jsonIO.set_value("user_db", obj_id, "pic", new_name)
     return "File copied"
 
-def get_file
+#pre:	image must exist
+#post:	either error message or returns path of image
+def get_pic(user_id, user_type):	
+	if user_type == "team":
+		pic = jsonIO.get_value("team_db", user_id, "pic")
+	else:
+		pic = jsonIO.get_value("user_db", user_id, "pic")
+	return os.path.join(img_folder, pic)
+
+#pre:	project must exist and path must be valid
+#post:	either error message or returns project
+def get_project(dst, project_id):
+	project = jsonIO.get_value("project_db", project_id, "submission")
+	if not project:
+		return "Project has not been submitted yet"
+	#check file path exist to image
+	if not os.path.exists(dst):
+		return "The file path: " + dst + " does not exist."
+	#if file exist in folder rename to (1)
+	path = os.path.join(prj_folder, project)
+	if not os.path.exists(path):
+		return "We couldn't find project in our database, contact admin"
+	new_name = project
+	if os.path.exists(os.path.join(dst, new_name)):
+		n = 1
+		new_name += "(" + str(n) + ")"
+		#if still exist, keep incrementing number
+		while os.path.exists(os.path.join(dst, new_name)):
+			n += 1
+			new_name = new_file + "(" + str(n) + ")"
+		#copies the renamed file to file folder
+		shutil.move(path, os.path.join(dst, new_name))
+	else:
+		#copies the file to file folder
+		shutil.move(path, dst)
+	#remove the project from the database
+	jsonIO.set_value("project_db", project_id, "submission", "")
+	if os.path.exists(path):
+		os.remove(path)
+	return path
