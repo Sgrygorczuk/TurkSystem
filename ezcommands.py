@@ -663,6 +663,19 @@ def get_chosen_bid(project_id, only_id = False):
 		return bid_log[chosen_index][1]
 	else:
 		return bid_log[chosen_index]
+		
+def get_bid_log(bid_id, only_id = False):
+    if bid_id == None:
+        print("Bid not found")
+        return []
+    bid_log = jsonIO.get_value("bid_db", bid_id, "bid_log")
+    if not bid_log or bid_log == [[]]:
+        print("Bid log is empty")
+        return []
+    if only_id:
+        return bid_log[0][1]
+    else:
+        return bid_log
 
 #cond: this is called at the beginning after the bid is done
 #      the SU will withdraw the money and take 10% then give
