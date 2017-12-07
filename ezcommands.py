@@ -99,7 +99,7 @@ Engines
 	*not made*rank(): Ranks first three, will use bayesian to accomplish that
 -------------------------------------------------------------------------------------
 Metrics
-	*not made*bayesian(): returns the bayesian calculation
+	bayesian_avg(user, m, c): returns the bayesian average of the user's grade(rating)
 	get_grade(user): returns the average rating of dev, team, or client
 	get_total_commision(obj,dic=false): returns the money made 
 		by all projects from user/ team
@@ -116,7 +116,10 @@ Helper functions
 	is_admin(dic): returns true if user is team admin
 	set_file(src, new_file = None, dst = None, old_file = None, obj_id = None, obj_type = None):
 		will either return available files if file not stated
-		else return success/failure message''')
+		else return success/failure message
+	grade_log(user): return a list of user's project grades
+	get_m_c(user_type): return [m, c] for bayesian_avg(user, m, c)
+''')
 
 #############################################################################
 
@@ -929,7 +932,7 @@ def get_grade(user):
                 if user["user_type"] == "dev":     # developer grade
                     grade += p['team_rating']
                     #print(grade)
-                else:                              # client grade
+                elif user["user_type"] == 'client':# client grade
                     grade += p['client_rating']    
             except KeyError:                       # team grade
                 grade += p['team_rating']
@@ -959,7 +962,87 @@ def get_total_commision(obj, dict = 0):
     #if commision exist return something
     return commision
 	
-	
+# helper function for bayesian_avg(user, m, c)
+# pre: user is a valid row(dictionary) in database
+# post: return a list of user's project grades that are inactive(graded)
+def grade_log(user):
+    grades = []
+    
+    # list may or may not have one active project as the current project
+    completed_project = len(user["project_ids"]) 
+    if completed_project > 0:
+        if is_in_active_project(user): # list have one active project
+            completed_project = completed_project - 1
+    grades = []
+    if completed_project > 0:
+        for project in user["project_ids"][:completed_project]:
+            p = jsonIO.get_row("project_db", project)
+            try:
+                if user["user_type"] == "dev":     # developer grade
+                    grades.append(p['team_rating'])
+                elif user["user_type"] == 'client':# client grade
+                    grades.append(p['client_rating'])
+            except KeyError:                       # team grade
+                grades.append(p['team_rating'])
+    return grades
+
+# return an average grade of a user 
+# using bayesian average = (sum_grades + c*m)/(n + c) where 
+# 
+# sum_grades = sum of all grades the user got
+# n = the number of project the user finihsed
+# m = mean grade across the user type <= get_m_c(user_type)[0]
+# c = number of project the user type finished in average <= get_m_c(user_type)[1] 
+def bayesian_avg(user, m, c):
+    grades = grade_log(user)
+    sum_grades = sum(grades)
+    n = len(grades)
+    
+    if (n + c == 0):
+        return 'Nan'
+    
+    return (sum_grades + c*m)/(n + c)
+
+# helper function for rank()
+# pre: user_type can be either 'dev', 'client', or 'team'
+# post: return [m, c] where
+#          m = the mean grade among the user type, 
+#          c = the average number of project the user type finished
+#       otherwise, return []
+def get_m_c(user_type):
+    
+    if user_type not in ['dev', 'client', 'team']:
+        return []
+    
+    DB = 'user_db'
+    if (user_type == 'team'):
+        DB = 'team_db'
+
+    mean_grade = 0 
+    mean_project_num = 0
+    users = jsonIO.read_rows(DB)
+    
+    if users: # if any row exist in the database
+        users_with_grade = []
+        if (user_type == 'team'):
+            users_with_grade = list(filter(lambda user: get_grade(user) > 0, users))
+        else:
+            users_with_grade = list(filter(lambda user: get_grade(user) > 0 and user['user_type'] == user_type, users))
+        
+        grades = list(map(lambda user: get_grade(user), users_with_grade))
+        projects = list(map(lambda user: len(user["project_ids"]), users_with_grade))
+
+        # calculate m, which is mean_grade
+        if len(grades) != 0:
+            mean_grade = sum(grades)/len(grades)
+        # calculate c, which is mean_project_num
+        if len(projects) != 0:
+            mean_project_num = sum(projects)/len(projects)
+        else:
+            print("zero projects")
+    return [mean_grade, mean_project_num]
+
+
 #/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\
 #pre: must have a valid db, key and value
 #post: returns row of given key value
