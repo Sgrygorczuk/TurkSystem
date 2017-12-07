@@ -485,8 +485,10 @@ def create_bid(project_id, end_date, initial_bid, start_date =  datetime.now().s
         return 'Nan'
     elif bid:
         print("Bid already exists")
-        bid.add_bid_log(start_date, user["id"], initial_bid, end_date)
-        return bid.get_all()
+        log = get_bid_log(bid['id'])
+        log.append([start_date, user["id"], initial_bid, end_date])
+        print(log)
+        return log
     elif not user:
         print("User not found")
         del_row("project_db", project_id)
