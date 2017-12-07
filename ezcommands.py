@@ -87,22 +87,27 @@ Bid and Project Process
 		transfer the initial funds 
 	transfer_initial_bid_funds(from_user_id, to_user_id, amount): it will modify both 
 		 balances and create task. Check below for more details.
-	finalize_funds(project_id): transfers the remaining funds after the 
-		completion/ incompletion of project
 	submit(src, new_project, project_id): will make/ update project
 		if exist, it will no longer allow submission
 	get_submission(dst, project_id): either error message or returns project
-	*not made*make_rating(user_id, rating)
+	make_rating(user_id, rating, comment = ""): if rating <= 2 dev explain himself
+		if rating <= 3 client explain himself
+		calls set_warning to take care of the warnings
+	finalize_funds(project_id): transfers the remaining funds after the 
+		completion/ incompletion of project
+	set_warning(user_dict, prj_dict, rating = 'Nan'):user's warning will increase depending on inputs
+		check user's out_ratings and will increase warnings too
 -------------------------------------------------------------------------------------
 Engines
 	search_matches(obj, input_name): Uses the search engine to find name
 	*not made*rank(): Ranks first three, will use bayesian to accomplish that
 -------------------------------------------------------------------------------------
 Metrics
-	bayesian_avg(user, m, c): returns the bayesian average of the user's grade(rating)
 	get_grade(user): returns the average rating of dev, team, or client
 	get_total_commision(obj,dic=false): returns the money made 
 		by all projects from user/ team
+	bayesian_avg(user, m, c): returns the bayesian average of the user's grade(rating)
+	avg_out_rating(user_dict): returns average out rating from a user
 -------------------------------------------------------------------------------------
 Helper functions
 	find_row(db, key, value): returns row of given key value
@@ -819,6 +824,87 @@ def transfer_initial_bid_funds(from_user_id, to_user_id, amount = 10):
 	jsonIO.set_row("user_db", to_user)
 	return 1
 
+#pre: 	src is destination of the user's file 
+#		new_project is the name of the file
+#post:	will make/ update project
+#		if exist, it will no longer allow submission
+def submit(src, new_project, project_id):
+    if jsonIO.get_value("project_db", project_id, "submission"):
+        return "User has already submitted a project"
+    return set_file(src, new_project, prj_folder, None, project_id, "project") 	
+	
+#pre:	project must exist and path must be valid
+#post:	either error message or returns project
+def get_submission(dst, project_id):
+	project = jsonIO.get_value("project_db", project_id, "submission")
+	if not project:
+		return "Project could not be found"
+	if not project["submission"]:
+		return "Project has not been submitted yet"
+	#check file path exist to image
+	if not os.path.exists(dst):
+		return "The file path: " + dst + " does not exist."
+	#if file exist in folder rename to (1)
+	path = os.path.join(prj_folder, project)
+	if not os.path.exists(path):
+		return "We couldn't find project in our database, contact admin"
+	new_name = project
+	if os.path.exists(os.path.join(dst, new_name)):
+		n = 1
+		new_name += "(" + str(n) + ")"
+		#if still exist, keep incrementing number
+		while os.path.exists(os.path.join(dst, new_name)):
+			n += 1
+			new_name = new_file + "(" + str(n) + ")"
+		#copies the renamed file to file folder
+		shutil.copy(path, os.path.join(dst, new_name))
+	else:
+		#copies the file to file folder
+		shutil.copy(path, dst)
+	#remove the project from the database
+	#jsonIO.set_value("project_db", project_id, "submission", "")
+	# if os.path.exists(path):
+		# os.remove(path)
+	return path	
+
+#pre:	project must be in complete stage and respective ratings are empty
+#post:	if rating <= 2 dev explain himself
+#		if rating <= 3 client explain himself
+#		calls set_warning to take care of the warnings
+def make_rating(user_id, rating, comment = ""):
+	#check if valid user
+	user = jsonIO.get_row("user_db", user_id)
+	if not user:
+		print("User not valid")
+		return 'Nan'
+	if not user["project_ids"]:
+		print("User has not done any projects")
+		return 'Nan'
+	#check for project completion
+	project = jsonIO.get_row("project_db", user["project_ids"][-1])
+	if jsonIO.get_value("project_db", project["id"], "status") != "complete":
+		print("Project not yet completed")
+		return 'Nan'
+	#check if it is a client
+	if user["user_type"] == "client":
+		#check rating < 3: make comment
+		if rating < 3 and not comment:
+			return "Rating was less than 3 please provide a justification"
+		else:
+			project["client_rating"] = rating
+			project["client_review"] = comment
+	#check if it is a dev
+	elif user["user_type"] == "dev":
+		#check rating <= 2: make comment
+		if rating <= 2 and not comment:
+			return "Rating was 2 or less please provide a justification"
+		else:
+			project["team_rating"] = rating
+			project["team_review"] = comment
+	jsonIO.set_row("project_db", project)
+	set_warning(user, project, rating)
+	return "Thank you for using our turksystem"
+
 #pre:	must have a valid bid and project must be complete
 #post:	transfers the remaining funds after the completion/ incompletion of project
 def finalize_funds(project_id):
@@ -851,47 +937,40 @@ def finalize_funds(project_id):
     transfer_funds(0, bid_log[1], deduction)
     print("Tranfer of funds to dev is complete")
     return 1
-#pre: 	src is destination of the user's file 
-#		new_project is the name of the file
-#post:	will make/ update project
-#		if exist, it will no longer allow submission
-def submit(src, new_project, project_id):
-    if jsonIO.get_value("project_db", project_id, "submission"):
-        return "User has already submitted a project"
-    return set_file(src, new_project, prj_folder, None, project_id, "project") 	
-	
-#pre:	project must exist and path must be valid
-#post:	either error message or returns project
-def get_submission(dst, project_id):
-	project = jsonIO.get_value("project_db", project_id, "submission")
-	if not project:
-		return "Project has not been submitted yet"
-	#check file path exist to image
-	if not os.path.exists(dst):
-		return "The file path: " + dst + " does not exist."
-	#if file exist in folder rename to (1)
-	path = os.path.join(prj_folder, project)
-	if not os.path.exists(path):
-		return "We couldn't find project in our database, contact admin"
-	new_name = project
-	if os.path.exists(os.path.join(dst, new_name)):
-		n = 1
-		new_name += "(" + str(n) + ")"
-		#if still exist, keep incrementing number
-		while os.path.exists(os.path.join(dst, new_name)):
-			n += 1
-			new_name = new_file + "(" + str(n) + ")"
-		#copies the renamed file to file folder
-		shutil.move(path, os.path.join(dst, new_name))
-	else:
-		#copies the file to file folder
-		shutil.move(path, dst)
-	#remove the project from the database
-	jsonIO.set_value("project_db", project_id, "submission", "")
-	if os.path.exists(path):
-		os.remove(path)
-	return path	
 
+#cond:	uses the user and project dictionary to check rating of new project 
+#pre:	must be called after incomplete project or after rating
+#post:	user's warning will increase depending on inputs
+#		check user's out_ratings and will increase warnings too
+def set_warning(user_dict, prj_dict, rating = 'Nan'):
+	#grabs all user from project if it is in a team
+	if user_dict["team_id"] != 'Nan':
+		devs = []
+		for dev in jsonIO.get_value("team_db", user_dict["team_id"], "dev_ids"):
+			devs.append(jsonIO.get_row("user_db", dev))
+	else:
+		devs = [user_dict]
+	#check if project is in incomplete state
+	if prj_dict["status"] == "incomplete":
+		#increment warning
+		print("Project was incomplete")
+		for dev in devs:
+			dev["warning"] += 1
+	#check this user's average in rating
+	for dev in devs:
+		if get_grade(dev) <= 2 and len(dev["project_ids"]) >= 5:
+			print("User was given low average rating")
+			dev["warning"] += 1
+		#check this user's average out rating
+		out_rate = avg_out_rating(dev)
+		if out_rate < 2 and len(dev["project_ids"]) >= 8:
+			print("User has given low average rating")
+			dev["warning"] += 1
+		elif out_rate > 4 and len(dev["project_ids"]) >= 8:
+			print("User has given high average rating")
+			dev["warning"] += 1
+		jsonIO.set_value("user_db", dev["id"], "warning", dev["warning"])
+	
 	
 #/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\
 #post: Uses the search engine to find name
@@ -961,30 +1040,6 @@ def get_total_commision(obj, dict = 0):
                 commision += bid
     #if commision exist return something
     return commision
-	
-# helper function for bayesian_avg(user, m, c)
-# pre: user is a valid row(dictionary) in database
-# post: return a list of user's project grades that are inactive(graded)
-def grade_log(user):
-    grades = []
-    
-    # list may or may not have one active project as the current project
-    completed_project = len(user["project_ids"]) 
-    if completed_project > 0:
-        if is_in_active_project(user): # list have one active project
-            completed_project = completed_project - 1
-    grades = []
-    if completed_project > 0:
-        for project in user["project_ids"][:completed_project]:
-            p = jsonIO.get_row("project_db", project)
-            try:
-                if user["user_type"] == "dev":     # developer grade
-                    grades.append(p['team_rating'])
-                elif user["user_type"] == 'client':# client grade
-                    grades.append(p['client_rating'])
-            except KeyError:                       # team grade
-                grades.append(p['team_rating'])
-    return grades
 
 # return an average grade of a user 
 # using bayesian average = (sum_grades + c*m)/(n + c) where 
@@ -1003,45 +1058,18 @@ def bayesian_avg(user, m, c):
     
     return (sum_grades + c*m)/(n + c)
 
-# helper function for rank()
-# pre: user_type can be either 'dev', 'client', or 'team'
-# post: return [m, c] where
-#          m = the mean grade among the user type, 
-#          c = the average number of project the user type finished
-#       otherwise, return []
-def get_m_c(user_type):
-    
-    if user_type not in ['dev', 'client', 'team']:
-        return []
-    
-    DB = 'user_db'
-    if (user_type == 'team'):
-        DB = 'team_db'
-
-    mean_grade = 0 
-    mean_project_num = 0
-    users = jsonIO.read_rows(DB)
-    
-    if users: # if any row exist in the database
-        users_with_grade = []
-        if (user_type == 'team'):
-            users_with_grade = list(filter(lambda user: get_grade(user) > 0, users))
-        else:
-            users_with_grade = list(filter(lambda user: get_grade(user) > 0 and user['user_type'] == user_type, users))
-        
-        grades = list(map(lambda user: get_grade(user), users_with_grade))
-        projects = list(map(lambda user: len(user["project_ids"]), users_with_grade))
-
-        # calculate m, which is mean_grade
-        if len(grades) != 0:
-            mean_grade = sum(grades)/len(grades)
-        # calculate c, which is mean_project_num
-        if len(projects) != 0:
-            mean_project_num = sum(projects)/len(projects)
-        else:
-            print("zero projects")
-    return [mean_grade, mean_project_num]
-
+#post: returns the average grades user GIVES OUT TO OTHERS
+def avg_out_rating(user_dict):
+    if not user_dict["project_ids"]:
+        return 0
+    total = 0
+    if user_dict["user_type"] == "client":
+        rate_type = "client_rating"
+    else:
+        rate_type = "team_rating"
+    for prj_id in user_dict["project_ids"]:
+        total += jsonIO.get_value("project_db", prj_id, rate_type)
+    return round(total/len(user_dict["project_ids"]), 1)
 
 #/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\
 #pre: must have a valid db, key and value
@@ -1194,3 +1222,66 @@ def set_file(src, new_file = None, dst = None, old_file = None, obj_id = None, o
     else:
         jsonIO.set_value("user_db", obj_id, "pic", new_name)
     return "File copied"
+	
+# helper function for bayesian_avg(user, m, c)
+# pre: user is a valid row(dictionary) in database
+# post: return a list of user's project grades that are inactive(graded)
+def grade_log(user):
+    grades = []
+    
+    # list may or may not have one active project as the current project
+    completed_project = len(user["project_ids"]) 
+    if completed_project > 0:
+        if is_in_active_project(user): # list have one active project
+            completed_project = completed_project - 1
+    grades = []
+    if completed_project > 0:
+        for project in user["project_ids"][:completed_project]:
+            p = jsonIO.get_row("project_db", project)
+            try:
+                if user["user_type"] == "dev":     # developer grade
+                    grades.append(p['team_rating'])
+                elif user["user_type"] == 'client':# client grade
+                    grades.append(p['client_rating'])
+            except KeyError:                       # team grade
+                grades.append(p['team_rating'])
+    return grades	
+	
+# helper function for rank()
+# pre: user_type can be either 'dev', 'client', or 'team'
+# post: return [m, c] where
+#          m = the mean grade among the user type, 
+#          c = the average number of project the user type finished
+#       otherwise, return []
+def get_m_c(user_type):
+    
+    if user_type not in ['dev', 'client', 'team']:
+        return []
+    
+    DB = 'user_db'
+    if (user_type == 'team'):
+        DB = 'team_db'
+
+    mean_grade = 0 
+    mean_project_num = 0
+    users = jsonIO.read_rows(DB)
+    
+    if users: # if any row exist in the database
+        users_with_grade = []
+        if (user_type == 'team'):
+            users_with_grade = list(filter(lambda user: get_grade(user) > 0, users))
+        else:
+            users_with_grade = list(filter(lambda user: get_grade(user) > 0 and user['user_type'] == user_type, users))
+        
+        grades = list(map(lambda user: get_grade(user), users_with_grade))
+        projects = list(map(lambda user: len(user["project_ids"]), users_with_grade))
+
+        # calculate m, which is mean_grade
+        if len(grades) != 0:
+            mean_grade = sum(grades)/len(grades)
+        # calculate c, which is mean_project_num
+        if len(projects) != 0:
+            mean_project_num = sum(projects)/len(projects)
+        else:
+            print("zero projects")
+    return [mean_grade, mean_project_num]

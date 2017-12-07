@@ -11,7 +11,7 @@ class Project:
 
 	#create a new project in db and in class
 	def new_project(self, client_id, title, desc, deadline, bid_end_date = "",
-		bid_id='Nan', submission = "", client_rating = 0, team_rating = 0, client_review = "", team_review = "", status = "inactive"):
+		bid_id='Nan', submission = "", client_rating = 0, team_rating = 0, client_review = "", team_review = "", status = "bidding"):
 		self.set_all(client_id, title, desc, deadline, bid_end_date, bid_id, submission, client_rating, team_rating, client_review, team_review, status)
 		#make new class if not called explicitly
 		if title:
