@@ -95,8 +95,8 @@ Engines
 -------------------------------------------------------------------------------------
 Metrics
 	*not made*bayesian(): returns the bayesian calculation
-	get_grade(user): returns the average rating of team(developer is a team of one) or client
-					 given a user data
+	get_grade(user): returns the average rating of a user
+					 a user can be a team, a developer, or a client in the json database
 	get_total_commision(obj,dic=false): returns the money made 
 		by all projects from user/ team
 -------------------------------------------------------------------------------------
@@ -797,7 +797,7 @@ def search_matches(obj, input_name):
 	
 	
 #/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\
-#pre: user is a user's data(one row) in dictionary format
+#pre: user exists in "user_db" ,and user can be a team, a developer, or a client
 #post: return average rating of the user
 def get_grade(user):
     grade = 0 
@@ -805,20 +805,21 @@ def get_grade(user):
     if completed_project > 0:
         if is_in_active_project(user):
             completed_project = completed_project - 1
-            print("active", completed_project) # for debugging
             
     if completed_project > 0:
         for project in user["project_ids"][:completed_project]:
             p = jsonIO.get_row("project_db", project)
-            print(p['team_rating']) # for debugging
-            if user["user_type"] == "dev":
+            try:
+                if user["user_type"] == "dev":     # developer grade
+                    grade += p['team_rating']
+                    #print(grade)
+                else:                              # client grade
+                    grade += p['client_rating']    
+            except KeyError:                       # team grade
                 grade += p['team_rating']
-                #print(grade)
-            else: 
-                grade += p['client_rating'] 
         grade = round(grade/completed_project, 1)
     return grade 
-	
+
 # def get_grade(dict):
 #     grade = 0 
 #     if len(dict["project_ids"]) > 0:
