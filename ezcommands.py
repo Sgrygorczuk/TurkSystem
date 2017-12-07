@@ -175,17 +175,17 @@ def get_row(obj, id = 'Nan'):
 #pre: needs valid instance of class and its key
 #post: returns the whole column of an attribute
 def get_col(obj, key):
-	array = []
-	#don't include SU (id = 0)
-	n = 0
-	if obj.__class__ == User:
-		n += 1
-	for id in range(n, jsonIO.get_last_id(obj.db)):
-		attrib = jsonIO.get_value(obj.db, id, key)
-		#if it exist
-		if attrib!= None:
-			array.append({"id": id, key: attrib})
-	return array
+    array = []
+    #don't include SU (id = 0)
+    n = 0
+    if obj.__class__ == User:
+        n += 1
+    for id in range(n, jsonIO.get_last_id(obj.db)+1):
+        attrib = jsonIO.get_value(obj.db, id, key)
+        #if it exist
+        if attrib!= None:
+            array.append({"id": id, key: attrib})
+    return array
 #####***************************might break at bid_log call*************	
 #pre: any DB array	
 #post: print table
@@ -439,72 +439,79 @@ def register_user(name, username, password, user_type, deposit):
 
 #pre: needs all the entries filled and an existing client id
 #post: will return and make a new project, and add project_id to client
-def create_project(client_id, title, desc, deadline):
-	#check empty
-	if title == "":
-		return "Title field is empty"
-	if desc == "":
-		return "Description field is empty"
-	if deadline == "":
-		return "End date field is empty"
-	if not find_row("user_db","id", client_id):
-		print("User not found")
-		return 'Nan'
-	#make sure string is a valid date
-	#uses helper_function
-	e_date = string_to_datetime(deadline)
-	if not e_date:
-		return 'Nan'
-	#make sure end time > start time 
-	if dt_now >= e_date:
-		return "The end date must be after the start date"
-	project = Project(client_id, title, desc, deadline)
-	client = User()
-	client.load_db(client_id)
-	client.add_project_ids(project.get_id())
-	return project
+def create_project(client_id, title, desc):
+    #check empty
+    if title == "":
+        return "Title field is empty"
+    if desc == "":
+        return "Description field is empty"
+    if not find_row("user_db","id", client_id):
+        print("User not found")
+        return 'Nan'
+    
+    end_date = datetime.now() + timedelta(days=7)
+    end_date = end_date.strftime("%Y-%m-%d %H:%M:%S")
+
+    project = Project(client_id, title, desc, bid_end_date = end_date, status = "bidding")
+    client = User()
+    client.load_db(client_id)
+    client.add_project_ids(project.get_id())
+    return project.get_all()
 
 #pre: must have client and project id for input and bid_id must be new
 #    end>start date and client's balance >= bid
 #post: returns a new bid
-def create_bid(project_id, end_date, initial_bid, start_date = now):
-	#check empty
-	if start_date == "":
-		print("Start date field is empty")
-		return 'Nan'
-	if end_date == "":
-		return "End date field is empty"
-	#check amount is positive
-	if initial_bid < 0:
-		return "Initial bid must be positive"
-	#check id consistencies
-	project = jsonIO.get_row("project_db", project_id)
-	if not project:
-		print("Project not found")
-		return 'Nan'
-	bid = jsonIO.get_row("bid_db", project_id)
-	if bid:
-		print("Bid already exists")
-		return 'Nan'
-	user = jsonIO.get_row("user_db", project["client_id"])
-	if not user:
-		print("User not found")
-		return 'Nan'
-	#make sure client has money
-	if float(user["balance"]) < initial_bid:
-		return "User does not have enough funds"
-	#make sure end time > start time
-	#uses helper_function
-	s_date = string_to_datetime(start_date)
-	e_date = string_to_datetime(end_date)
-	#make sure string is a valid date
-	#uses helper_function
-	if not s_date or not e_date:
-		return 'Nan'
-	if s_date >= e_date:
-		return "The end date must be after the start date"
-	return Bid(project_id, [start_date, user["id"], initial_bid, end_date])
-
+def create_bid(project_id, end_date, initial_bid, start_date =  datetime.now().strftime("%Y-%m-%d %H:%M:%S")):
+    project = jsonIO.get_row("project_db", project_id)
+    user = jsonIO.get_row("user_db", project["client_id"])
+    bid = jsonIO.get_row("bid_db", project_id)
+    s_date = string_to_datetime(start_date)
+    e_date = string_to_datetime(end_date)
+    #check empty
+    if start_date == "":
+        del_row("project_db", project_id)
+        print("Start date field is empty")
+        return 'Nan'
+    elif end_date == "":
+        del_row("project_db", project_id)
+        return 'Nan'
+    #check amount is positive
+    elif initial_bid < 0:
+        return 'Nan'
+    #check id consistencies
+    elif not project:
+        print("Project not found")
+        del_row("project_db", project_id)
+        return 'Nan'
+    elif bid:
+        print("Bid already exists")
+        bid.add_bid_log(start_date, user["id"], initial_bid, end_date)
+        return bid.get_all()
+    elif not user:
+        print("User not found")
+        del_row("project_db", project_id)
+        return 'Nan'
+    #make sure client has money
+    elif float(user["balance"]) < initial_bid:
+        print("User does not have enough funds")
+        del_row("project_db", project_id)
+        return 'Nan'
+    #make sure end time > start time
+    #uses helper_function
+    #make sure string is a valid date
+    #uses helper_function
+    elif not s_date or not e_date:
+        del_row("project_db", project_id)
+        return 'Nan'
+    elif s_date >= e_date:
+        del_row("project_db", project_id)
+        print("The end date must be after the start date")
+        return 'Nan'
+    else:
+        bid = Bid(project_id)
+        bid.add_bid_log(start_date, user["id"], initial_bid, end_date)
+        add_row("bid_db", bid.get_all())
+        return bid.get_all()
 #pre: 	src is destination of the user's file 
 #		user_type is either team or user
 #		new_img is the name of the file
@@ -1032,12 +1039,12 @@ def tranfer_funds(from_user_id, to_user_id, amount):
 #pro: check if user is active
 def is_in_active_project(user):
    if len(user["project_ids"]) > 0:
-	   id = user["project_ids"][len(user["project_ids"]) - 1]
-	   project = jsonIO.get_row("project_db", id)
-	   if project["status"] == "active":
-		   return True
-	   else:
-		   return False
+       id = user["project_ids"][len(user["project_ids"]) - 1]
+       project = jsonIO.get_row("project_db", id)
+       if project["status"] == "active" or project["status"] == "submitted" or (project["status"] == "bidding" and user["user_type"] == "client"):
+           return True
+       else:
+           return False
    return False
   
 #cond: dict will contain a dict of user (has "team_id and id")
