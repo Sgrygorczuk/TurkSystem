@@ -46,7 +46,6 @@ SU
 	user_report(user, id = 'Nan'): returns status of the user:
 		user_type, status, warning, and balance
 	verify(username, password = ""): returns [case number, user, message]
-	
 	quit_request: user is removed and will call quit_team
 	quit_team: doesnt matter if admin or user, but will kick devs if he's last admin
 		and update their team_ids
@@ -76,18 +75,24 @@ Teams
 -------------------------------------------------------------------------------------
 Bid and Project Process
 	bid_timeout(bid_id): returns if the bid was over with 1 otherwise 0
+	make_bid(user_id, bid_id, amount, suggested_time): 	wil append to the bid_log 
+		when project status is "bidding"
+		chosen_index != 'Nan', then call end_bid
 	choose_bid(bid_id, dev_id, reason = "lowest bidder"): modifies bid_db and changes states
+	get_bid_log(bid_id, only_id = False):  returns the entire bid_log
 	get_chosen_bid(project_id, only_id = False): gets bid_log of winner bidder
-	project_fund_transfer(from_user_id, to_user_id, amount): it will modify both 
+	end_bid(bid_id): if not chosen_index but has bids in bid log it will update it
+		set project to "active" if bid on else "no bid"
+		set user status to "active" who were in bid
+		transfer the initial funds 
+	transfer_initial_bid_funds(from_user_id, to_user_id, amount): it will modify both 
 		 balances and create task. Check below for more details.
-	def finalize_funds(project_id): transfers the remaining funds after the 
+	finalize_funds(project_id): transfers the remaining funds after the 
 		completion/ incompletion of project
-	*not made*make_bid: first check if project == "bidding" -> call bid
-	*not made*end_bid: make needed modifications such as penalty or set_team_id
-	*not made*make_rating(user_id, rating)
 	submit(src, new_project, project_id): will make/ update project
 		if exist, it will no longer allow submission
 	get_submission(dst, project_id): either error message or returns project
+	*not made*make_rating(user_id, rating)
 -------------------------------------------------------------------------------------
 Engines
 	search_matches(obj, input_name): Uses the search engine to find name
@@ -95,8 +100,7 @@ Engines
 -------------------------------------------------------------------------------------
 Metrics
 	*not made*bayesian(): returns the bayesian calculation
-	get_grade(user): returns the average rating of a user
-					 a user can be a team, a developer, or a client in the json database
+	get_grade(user): returns the average rating of dev, team, or client
 	get_total_commision(obj,dic=false): returns the money made 
 		by all projects from user/ team
 -------------------------------------------------------------------------------------
@@ -605,23 +609,70 @@ def demote(team_dict, user_id):
  
 	
 #/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\
+#post:	returns the bidder's index from last to first
+def get_bidder_index(bid_id, bid_log, dev_id):
+    for j in range(len(bid_log)-1, 0, -1):
+        if bid_log[j][1] == dev_id:
+            return j
+    return 'Nan'
 
 #post: returns if the bid was over with 1 otherwise 0
 def bid_timeout(bid_id):
-	project = jsonIO.get_row("project_db", bid_id)
-	if not project:
-		print("No such id exist")
-		return 0
-	#project must be in a bidding state
-	if project["status"] != "bidding":
-		return 0
-	#calls helper function
-	now = get_now()
-	if string_to_datetime(project["bid_end_date"]) <= now:
-		return 1
-	else:
-		return 0
+    project = jsonIO.get_row("project_db", bid_id)
+    if not project:
+        print("No such id exist")
+        return 0
+    #project must be in a bidding state
+    if project["status"] != "bidding":
+        return 0
+    #calls helper function
+    now = get_now()
+    if string_to_datetime(project["bid_end_date"]) <= string_to_datetime(now):
+        return 1
+    else:
+        return 0
 
+#pre: amount < current_bid
+#     dt_later >= dt_now
+#post:wil append to the bid_log when project status is "bidding"
+#     chosen_index != 'Nan', then call end_bid
+def make_bid(user_id, bid_id, amount, suggested_time):
+    #calls helper function
+    #if not bid_timeout
+    if not bid_timeout(bid_id):
+        bid = jsonIO.get_row("bid_db", bid_id)
+        #check if amount < current_bid
+        if amount >= bid["bid_log"][-1][2]:
+            return "The bidder must give a valid amount"
+        #check suggested time <= client_suggested_time
+        if suggested_time >  bid["bid_log"][0][3]:
+            return "The suggested time must be less than the client's"
+        #check if user is in a team
+        user = jsonIO.get_row("user_db", user_id)
+        if user["team_id"] != 'Nan':
+        #check if user is an admin
+            team_id = user["team_id"]
+            if team_id:
+                admin_ids = jsonIO.get_value("team_db", team_id, "admin_ids")
+                if admin_ids:
+                    if user_id not in admin_ids:
+                        return "Only your admin can bid"
+        #check if the user is only bidding here or not all
+        if get_bidder_index(bid_id, bid["bid_log"], user_id) == 'Nan':
+            #if not bidding here check if he is active elsewhere
+            status = user["status"]
+            if status != "active":
+                return "The bidder is currently doing another project"
+            else:
+                jsonIO.set_value("user_db", user_id, "status", "bidding")
+        #make a bid
+        bid["bid_log"].append([get_now(), user_id, amount, suggested_time])
+        jsonIO.set_row("bid_db", bid)
+        #return done message
+        return "Done"
+    #else call calls end_bid
+    return "Bid was closed"		
+	
 #pre:	dev_id must exist in bid_log and must have reason if not lowest
 #post:	modifies bid_db, project and changes project state to active
 def choose_bid(bid_id, dev_id, reason = "lowest bidder"):
@@ -631,52 +682,89 @@ def choose_bid(bid_id, dev_id, reason = "lowest bidder"):
 		return ""
 	#if the bidder chosen was the lowest and default reason
 	if dev_id == bid["bid_log"][-1][1]:
-		bid["chosen_index"] = len(bid["bid_log"])-1
+		bid["chosen_index"] = -1
 		print(bid)
 	#check if reason was given
 	else:
 		if reason == "lowest bidder":
 			return "please give a valid reason"
 		else:
-			#find the index of the lowest 
-			for j in range(len(bid["bid_log"])-1, 0, -1):
-				if bid["bid_log"][j][1] == dev_id:
-					bid["chosen_index"] = j
-					j = len(bid["bid_log"])-1
+			#find and set the index of the chosen dev 
+			bid["chosen_index"] = get_bidder_index("bid_db", bid["bid_log"], dev_id)
 	bid["client_review"] = reason
 	jsonIO.set_row("bid_db", bid)
 	jsonIO.set_value("project_db", bid_id, "status", "active")
 	return "Done"
 
+#post: returns the entire bid_log
+def get_bid_log(bid_id, only_id = False):
+    if bid_id == None:
+        return []
+    bid_log = jsonIO.get_value("bid_db", bid_id, "bid_log")
+    if not bid_log or bid_log == [[]]:
+        return []
+    if only_id:
+        return bid_log[0][1]
+    else:
+        return bid_log	
+	
 #post:	returns the bid_log of the chosen bid
 #		if only_id = True we only return the winner's id
 def get_chosen_bid(project_id, only_id = False):
 	chosen_index = jsonIO.get_value("project_db", project_id, "chosen_index")
 	if chosen_index == None:
-		print("Bidder was not yet chosen")
 		return []
 	bid_log = jsonIO.get_value("bid_db", bid_id, "bid_log")
 	if not bid_log or bid_log == [[]]:
-		print("Bid log is empty")
 		return []
 	if only_id:
 		return bid_log[chosen_index][1]
 	else:
 		return bid_log[chosen_index]
-		
-def get_bid_log(bid_id, only_id = False):
-    if bid_id == None:
-        print("Bid not found")
-        return []
-    bid_log = jsonIO.get_value("bid_db", bid_id, "bid_log")
-    if not bid_log or bid_log == [[]]:
-        print("Bid log is empty")
-        return []
-    if only_id:
-        return bid_log[0][1]
-    else:
-        return bid_log
 
+#pre:	project status must be in bidding
+#post:	if not chosen_index but has bids in bid log it will update it
+#		set project to "active" if bid on else "no bid"
+#		set user status to "active" who were in bid
+#		transfer the initial funds
+def end_bid(bid_id):
+    project = jsonIO.get_row("project_db", bid_id)
+    bid = jsonIO.get_row("bid_db", bid_id)
+    #check if the project exist
+    if not project:
+        print ("Project does not exist")
+        return 'Nan'
+    if project["status"] != "bidding":
+        print("Project is not in bidding phase")
+        return 'Nan'
+    #check if project was bid on
+    if len(bid["bid_log"]) <= 1:
+        #PENALTY ON CLIENT
+        to_user_id = 0
+        amount = 10
+        project["status"] = "no bid"
+    #else we send the winner the money
+    else:
+        bid_log = get_chosen_bid(bid_id)
+        print(bid_log)
+        if not bid_log:
+            bid["chosen_index"] = -1
+            bid_log = bid["bid_log"][-1]
+        to_user_id = bid_log[1]
+        amount = bid_log[2]
+        project["deadline"] = bid_log[3]
+        #project is set to active
+        project["status"] = "active"
+        #set users who bid to active
+        temp = bid["bid_log"][0]
+        for bid_log in bid["bid_log"]:
+            if any(bid_log[1] != e for e in temp):
+                jsonIO.set_value("user_db", bid_log[1], "status", "active")
+                temp.append(bid_log[1])
+    jsonIO.set_row("project_db", project)
+    jsonIO.set_row("bid_db", bid)
+    return transfer_initial_bid_funds(from_user_id, to_user_id, amount)
+		
 #cond: this is called at the beginning after the bid is done
 #      the SU will withdraw the money and take 10% then give
 #      half of the money to the team, and will add to SU issues.
@@ -684,34 +772,40 @@ def get_bid_log(bid_id, only_id = False):
 #      the team submits their work or until the deadline.
 #pre: from, to users exist and amount exists and is valid
 #post: it will modify both balances and create issue.
-def project_fund_transfer(from_user_id, to_user_id, amount):
-	from_user = User()
-	to_user = User()
-	from_user.load_db(from_user_id)
-	to_user.load_db(to_user_id)
+def transfer_initial_bid_funds(from_user_id, to_user_id, amount = 10):
+	from_user = jsonIO.get_row("user_db",from_user_id)
+	to_user =  jsonIO.get_row("user_db", to_user_id)
 	if amount <= 0:
-		return "Must have a positive amount"
-	if from_user.get_id() == 'Nan':
-		print("The user you are grabbing from does not exist")
-		return 'Nan'
-	if (to_user.get_id() == 'Nan' or to_user.get_status() == "blacklisted" or
-		to_user.get_status() == "inactive" or to_user.get_status() == "rejected"):
-		return "The user you are sending to does not exist"
-	if from_user.get_balance() < amount:
-		return "The user does not have enough funds"
-	if not from_user.get_project_ids:
-		return "The client has not initiated a project"
-	#create a new Issue after money transfers
-	from_user.withdraw(amount)
-	#take 10% and take 50% until completion of project
-	deduction = round(amount*.1*.5, 2)
-	amount -= deduction
-	#keep it in superuser's bank
-	su_balance = jsonIO.get_value("user_db", 0, "balance") + deduction
-	jsonIO.set_value("user_db", 0, "balance", su_balance)
-	to_user.deposit(amount)
-	#create a new issue to retrieve the other 40% = 50%-10# fee
-	return Issue(from_user.get_project_ids[-1], "new project", True)
+		print("Must have a positive amount")
+		return 0
+	if from_user["balance"] < amount:
+		print("The user does not have enough funds")
+		return 0
+	if not from_user["project_ids"]:
+		print("The client has not initiated a project")
+		return 0
+	#takes money from the client
+	from_user["balance"] -= amount
+	#if it was because of the penalty
+	if to_user == 0:
+		to_user["balance"] += amount
+		print("Penalty of $10 had been taken from client")
+	#else it was success
+	else:
+		#take 10% and take 50% until completion of project
+		deduction = round(amount*.1*.5, 2)
+		amount -= deduction
+		#keep it in superuser's bank
+		su_balance = jsonIO.get_value("user_db", 0, "balance") + deduction
+		jsonIO.set_value("user_db", 0, "balance", su_balance)
+		to_user["balance"] += amount
+		jsonIO.set_row("user_db", from_user)
+		jsonIO.set_row("user_db", to_user)
+		#create a new issue to retrieve the other 40% = 50%-10# fee
+		print("Initial funds sent")
+	jsonIO.set_row("user_db", from_user)
+	jsonIO.set_row("user_db", to_user)
+	return 1
 
 #pre:	must have a valid bid and project must be complete
 #post:	transfers the remaining funds after the completion/ incompletion of project
@@ -723,7 +817,7 @@ def finalize_funds(project_id):
     if project["status"] != "incomplete" and project["status"] != "complete":
         print("Project was not set to complete or incomplete")
         return 0
-    bid_log = ez.get_chosen_bid(project_id)
+    bid_log = get_chosen_bid(project_id)
     if bid_log == []:
         print("Bid log does not exist")
         return 0
@@ -832,44 +926,6 @@ def get_grade(user):
                 grade += p['team_rating']
         grade = round(grade/completed_project, 1)
     return grade 
-
-# def get_grade(dict):
-#     grade = 0 
-#     if len(dict["project_ids"]) > 0:
-#         for project in dict["project_ids"]:
-#             p = jsonIO.get_row("project_db", project)
-#             if not is_in_active_project(dict):
-#                 if dict["user_type"] == "dev":
-#                     grade += p['team_rating']
-#                 else: 
-#                     grade += p['client_rating'] 
-#         if is_in_active_project(dict):
-#             if  (len(dict["project_ids"]) - 1) == 0:
-#                  return 0
-#             else:
-#                 grade /= (len(dict["project_ids"]) - 1)
-#         else:
-#             grade /= len(dict["project_ids"])
-#         grade = round(grade,1)
-#     return grade 
-
-# def get_grade_team(dict):
-#     grade = 0 
-#     if len(dict["project_ids"]) > 0:
-#         for project in dict["project_ids"]:
-#             if not is_in_active_project(dict):
-#                 p = jsonIO.get_row("project_db", project)
-#                 grade += p['team_rating']
-#         if is_in_active_project(dict):
-#             if  (len(dict["project_ids"]) - 1) == 0:
-#                  return 0
-#             else:
-#                 grade /= (len(dict["project_ids"]) - 1)
-#         else:
-#             grade /= len(dict["project_ids"])
-#         grade = round(grade,1)
-#     return grade 
-    
 	
 #cond: dev    total (dev)
 #      team   total (team)
