@@ -95,7 +95,8 @@ Engines
 -------------------------------------------------------------------------------------
 Metrics
 	*not made*bayesian(): returns the bayesian calculation
-	get_grade(obj,user_type,dic=false): returns the average rating of dev, team, or client
+	get_grade(user): returns the average rating of team(developer is a team of one) or client
+					 given a user data
 	get_total_commision(obj,dic=false): returns the money made 
 		by all projects from user/ team
 -------------------------------------------------------------------------------------
@@ -796,71 +797,64 @@ def search_matches(obj, input_name):
 	
 	
 #/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\
-#cond: dev    avg (dev,"team")
-#      team   avg (team,"team")
-#      client avg (client, "client")
-#pre: id must exists for all 
-#post: return average rate
-def get_grad(obj, user_type, dict = False):
-	grade = []
-	user_type+="_rating"
-	#grade for class
-	if not dict:
-		if ((obj.get_user_type() == "client" and user_type == "client") or 
-			(obj.get_user_type() != "client"  and user_type == "team")):
-			for id in obj.get_project_ids():
-				grade.append(jsonIO.get_value("project_db", id, user_type))
-		else:
-			print ("User types don't match")
-	#grade for dict
-	else:
-		if ((obj["get_user_type"] == "client" and user_type == "client") or 
-			(obj["get_user_type"] != "client"  and user_type == "team")):
-			for id in obj["project_ids"]:
-				grade.append(jsonIO.get_value("project_db", id, user_type))
-		else:
-			print ("User types don't match")
-	#if rate exist return something
-	if grade:
-		return round(numpy.mean(grade), 2)
-	return 'Nan'
-	
-def get_grade(dict):
+#pre: user is a user's data(one row) in dictionary format
+#post: return average rating of the user
+def get_grade(user):
     grade = 0 
-    if len(dict["project_ids"]) > 0:
-        for project in dict["project_ids"]:
+    completed_project = len(user["project_ids"])
+    if completed_project > 0:
+        if is_in_active_project(user):
+            completed_project = completed_project - 1
+            print("active", completed_project) # for debugging
+            
+    if completed_project > 0:
+        for project in user["project_ids"][:completed_project]:
             p = jsonIO.get_row("project_db", project)
-            if not is_in_active_project(dict):
-                if dict["user_type"] == "dev":
-                    grade += p['team_rating']
-                else: 
-                    grade += p['client_rating'] 
-        if is_in_active_project(dict):
-            if  (len(dict["project_ids"]) - 1) == 0:
-                 return 0
-            else:
-                grade /= (len(dict["project_ids"]) - 1)
-        else:
-            grade /= len(dict["project_ids"])
-        grade = round(grade,1)
-    return grade 
-
-def get_grade_team(dict):
-    grade = 0 
-    if len(dict["project_ids"]) > 0:
-        for project in dict["project_ids"]:
-            if not is_in_active_project(dict):
-                p = jsonIO.get_row("project_db", project)
+            print(p['team_rating']) # for debugging
+            if user["user_type"] == "dev":
                 grade += p['team_rating']
-        if is_in_active_project(dict):
-            if  (len(dict["project_ids"]) - 1) == 0:
-                 return 0
-            else:
-                grade /= (len(dict["project_ids"]) - 1)
-        else:
-            grade /= len(dict["project_ids"])
-        grade = round(grade,1)
+                #print(grade)
+            else: 
+                grade += p['client_rating'] 
+        grade = round(grade/completed_project, 1)
     return grade 
+	
+# def get_grade(dict):
+#     grade = 0 
+#     if len(dict["project_ids"]) > 0:
+#         for project in dict["project_ids"]:
+#             p = jsonIO.get_row("project_db", project)
+#             if not is_in_active_project(dict):
+#                 if dict["user_type"] == "dev":
+#                     grade += p['team_rating']
+#                 else: 
+#                     grade += p['client_rating'] 
+#         if is_in_active_project(dict):
+#             if  (len(dict["project_ids"]) - 1) == 0:
+#                  return 0
+#             else:
+#                 grade /= (len(dict["project_ids"]) - 1)
+#         else:
+#             grade /= len(dict["project_ids"])
+#         grade = round(grade,1)
+#     return grade 
+
+# def get_grade_team(dict):
+#     grade = 0 
+#     if len(dict["project_ids"]) > 0:
+#         for project in dict["project_ids"]:
+#             if not is_in_active_project(dict):
+#                 p = jsonIO.get_row("project_db", project)
+#                 grade += p['team_rating']
+#         if is_in_active_project(dict):
+#             if  (len(dict["project_ids"]) - 1) == 0:
+#                  return 0
+#             else:
+#                 grade /= (len(dict["project_ids"]) - 1)
+#         else:
+#             grade /= len(dict["project_ids"])
+#         grade = round(grade,1)
+#     return grade 
     
 	
 #cond: dev    total (dev)
