@@ -246,3 +246,18 @@ def get_rows(DB, key, value, reversed = False):
 # get_rows("project_db", 'status', 'active', True)# [{'id': 22,'clientId': 4, ... },{'id': 11,'clientId': 3, ... }]
 # get_rows("project_db", 'st', 'act')             # []
 ############################################################################
+
+# 9. return the total number of rows in DB.json
+# pre: DB.json exists in the same directory
+# Post: return the number of rows(dictionary) in DB.json
+def total_rows(DB):
+    rows = read_rows(DB)
+    if rows: # if a row of data exists
+        return len(rows)
+    else:
+        return 0
+### TEST
+# total_rows("user_db")
+# total_rows("proejct_db")
+# total_rows("not_exist") # return 0
+############################################################################ 
