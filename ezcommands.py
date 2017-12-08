@@ -46,8 +46,9 @@ SU
 	user_report(user, id = 'Nan'): returns status of the user:
 		user_type, status, warning, and balance
 	verify(username, password = ""): returns [case number, user, message]
-	quit_request: user is removed and will call quit_team
-	quit_team: doesnt matter if admin or user, but will kick devs if he's last admin
+	verify_blacklisted(user_id): reset user's status and warnings and returns true if it was done so
+	quit_request(issue_id): user is removed and will call quit_team
+	quit_team(user_id): doesnt matter if admin or user, but will kick devs if he's last admin
 		and update their team_ids
 -------------------------------------------------------------------------------------
 State Changes
@@ -65,7 +66,7 @@ Class Creation
 	get_pic(user_id, user_type): either error message or returns path of image
 -------------------------------------------------------------------------------------
 Teams
-	erase_empty_team(team_id): will delete team if there is no admin and return true
+	disactivate_empty_team(team_id): will disactivate team if there is no admin and return true
 		will also kick developers out and update their team_id to 'Nan'
         else it will return false
 	kick(team_dict, user_id):  will remove user from team and update both user and team db
@@ -420,7 +421,7 @@ def quit_team(user_id):
 							team["admin_ids"].remove(user_id))
 	#support function see bottom
 	#delete if he was the last admin and kick devs out
-	if not erase_empty_team(team["id"]):
+	if not disactivate_empty_team(team["id"]):
 		#team not yet erased
 		for dev in team["dev_ids"]:
 			if dev == user_id:
@@ -630,12 +631,12 @@ def get_pic(user_id, user_type):
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 
-#cond: will erase if there is no admin and return a truth
+#cond: will disactivate if there is no admin and return a truth
 #pre: the team_id is valid
-#post: will delete team if there is no admin and return true
+#post: will disactivate team if there is no admin and return true
 #      will also kick developers out and update their team_id to 'Nan'
 #      else it will return false
-def erase_empty_team(team_id):
+def disactivate_empty_team(team_id):
 	team = jsonIO.get_row("team_db", team_id)
 	if not team:
 		print ("Team does not exist")
@@ -645,7 +646,7 @@ def erase_empty_team(team_id):
 	if team["dev_ids"]:
 		for dev_id in team["dev_ids"]:
 			jsonIO.set_value("user_db", dev_id, "team_id", 'Nan')
-	jsonIO.del_row("team_db", team_id)
+	jsonIO.set_value("team_db", team_id, "status", "inactive")
 	return 1
 
 #pre: team and user must exit
