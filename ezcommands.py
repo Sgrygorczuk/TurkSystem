@@ -962,12 +962,19 @@ def transfer_initial_bid_funds(from_user_id, to_user_id, amount = 10):
 
 #pre: 	src is destination of the user's file 
 #		new_project is the name of the file
+#		checks if project is being submitted after the deadline
 #post:	will make/ update project
 #		if exist, it will no longer allow submission
+#		changes the project's status to complete or incomplete
 def submit(src, new_project, project_id):
-    if jsonIO.get_value("project_db", project_id, "submission"):
-        return "User has already submitted a project"
-    return set_file(src, new_project, prj_folder, None, project_id, "project") 	
+	if jsonIO.get_value("project_db", project_id, "submission"):
+		return "User has already submitted a project"
+	deadline = jsonIO.get_value("project_db", project_id, "deadline")
+	if string_to_datetime(deadline) <= get_now(True):
+		jsonIO.set_value("project_db", project_id, "status", "incomplete")
+		return "The project cannot be sumitted after the deadline"
+	jsonIO.set_value("project_db", project_id, "status", "complete")
+	return set_file(src, new_project, prj_folder, None, project_id, "project") 		
 	
 #pre:	project must exist and path must be valid
 #post:	either error message or returns project
