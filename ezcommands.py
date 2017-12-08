@@ -50,6 +50,9 @@ SU
 	quit_team: doesnt matter if admin or user, but will kick devs if he's last admin
 		and update their team_ids
 -------------------------------------------------------------------------------------
+State Changes
+	fsm_project(project_id): changes state and returns 1 or 0 depending on if it was done
+-------------------------------------------------------------------------------------
 Class Creation
 	user_exists(username): returns 1 if user exist else returns 0
 	register_user(name, username, password, user_type, deposit):
@@ -89,14 +92,15 @@ Bid and Project Process
 		 balances and create task. Check below for more details.
 	submit(src, new_project, project_id): will make/ update project
 		if exist, it will no longer allow submission
-	get_submission(dst, project_id): either error message or returns project
+	get_submission(dst, project_id): either error message or returns project and set project to "Complete"
 	make_rating(user_id, rating, comment = ""): if rating <= 2 dev explain himself
 		if rating <= 3 client explain himself
 		calls set_warning to take care of the warnings
 	finalize_funds(project_id): transfers the remaining funds after the 
 		completion/ incompletion of project
-	set_warning(user_dict, prj_dict, rating = 'Nan'):user's warning will increase depending on inputs
+	set_warning(user_dict, prj_dict, rating = 'Nan'): user's warning will increase depending on inputs
 		check user's out_ratings and will increase warnings too
+		sets user's status to "blacklisted" if warning == 2
 -------------------------------------------------------------------------------------
 Engines
 	search_matches(obj, input_name): Uses the search engine to find name
@@ -128,7 +132,11 @@ Helper functions
 
 #############################################################################
 
-#/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\DIRECT DATABASE ACCESS/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 
 #pre: given an instance of a class, key, and id (unless id is initialized in object)
 #post: get attribute from a class 
@@ -220,8 +228,12 @@ def print_table(m):
 		val_print(list(m.values()))
 	return 1
 	
-	
-#/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\
+
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\SU/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 			   
 #pre: needs a valid user of type user and could also do it from an id
 #post: returns dictionary of status of the user: user_type, status, warning, and balance
@@ -395,8 +407,52 @@ def quit_team(user_id):
 		message = "Done"
 	return message
 
+	
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\STATE CHANGES/\/\/\/\STATE CHANGES/\/\/\/\STATE CHANGES/\/\/\/\STATE CHANGES/\/\/\/\STATE CHANGES/\/
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 
-#/\/\/\/\CLASS CREATION/\/\/\/\CLASS CREATION/\/\/\/\CLASS CREATION/\/\/\/\
+#post: changes state based on class types
+def fsm_project(project_id):
+    project = jsonIO.get_row("project_db", project_id)
+    if not project:
+        print("project does not exist")
+        return 0
+    if project["status"] == "complete" or project["status"] == "incomplete" or project["status"] == "no bid":
+        print("project is in final state")
+        return 0
+    if project["status"] == "bidding":
+        #check if bid is over
+        if ez.bid_timeout(project_id):
+            if len(ez.get_bid_log(project_id)) <= 1:
+                jsonIO.set_value("project_db", project_id, "status", "no bid")
+            else:
+                jsonIO.set_value("project_db", project_id, "status", "active")
+            ez.end_bid(project_id)
+        else:
+            return 0
+    elif project["status"] == "active":
+        #check if the project is over
+        if ez.string_to_datetime(project["deadline"]) <= ez.get_now(True):
+            if project["submission"]:
+                jsonIO.set_value("project_db", project_id, "status", "submitted")
+            else:
+                jsonIO.set_value("project_db", project_id, "status", "incomplete")
+            ez.finalize_funds(project_id)
+        else:
+            return 0
+    # this should be covered by when customer gets project
+    #elif project["state"] == "submitted":
+    return 1	
+	
+	
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\CLASS CREATION/\/\/\/\CLASS CREATION/\/\/\/\CLASS CREATION/\/\/\/\CLASS CREATION/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 
 #pre: none
 #post: returns 1 if user exist else returns 0
@@ -544,7 +600,11 @@ def get_pic(user_id, user_type):
 	return os.path.join(img_folder, pic)
 
 	
-#/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\TEAMS/\/\/\/\/\/\/\/\/
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 
 #cond: will erase if there is no admin and return a truth
 #pre: the team_id is valid
@@ -624,8 +684,44 @@ def demote(team_dict, user_id):
    team_dict["admin_ids"].remove(user_id)
    set_row("team_db", team_dict)
  
-	
-#/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\
+
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\BID AND PROJECT PROCESS/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+
+def fsm_project(project_id):
+    project = jsonIO.get_row("project_db", project_id)
+    if not project:
+        print("project does not exist")
+        return 0
+    if project["status"] == "complete" or project["status"] == "incomplete" or project["status"] == "no bid":
+        print("project is in final state")
+        return 0
+    if project["status"] == "bidding":
+        #check if bid is over
+        if ez.bid_timeout(project_id):
+            if len(ez.get_bid_log(project_id)) <= 1:
+                jsonIO.set_value("project_db", project_id, "status", "no bid")
+            else:
+                jsonIO.set_value("project_db", project_id, "status", "active")
+            ez.end_bid(project_id)
+        else:
+            return 0
+    elif project["status"] == "active":
+        #check if the project is over
+        if ez.string_to_datetime(project["deadline"]) <= ez.get_now(True):
+            if project["submission"]:
+                jsonIO.set_value("project_db", project_id, "status", "submitted")
+            else:
+                jsonIO.set_value("project_db", project_id, "status", "incomplete")
+            ez.finalize_funds(project_id)
+        else:
+            return 0
+    # this should be covered by when customer gets project
+    #elif project["state"] == "submitted":
+    return 1
 #post:	returns the bidder's index from last to first
 def get_bidder_index(bid_id, bid_log, dev_id):
     for j in range(len(bid_log)-1, 0, -1):
@@ -643,8 +739,7 @@ def bid_timeout(bid_id):
     if project["status"] != "bidding":
         return 0
     #calls helper function
-    now = get_now()
-    if string_to_datetime(project["bid_end_date"]) <= string_to_datetime(now):
+    if string_to_datetime(project["bid_end_date"]) <= get_now(True):
         return 1
     else:
         return 0
@@ -780,7 +875,7 @@ def end_bid(bid_id):
                 temp.append(bid_log[1])
     jsonIO.set_row("project_db", project)
     jsonIO.set_row("bid_db", bid)
-    return transfer_initial_bid_funds(from_user_id, to_user_id, amount)
+    return transfer_initial_bid_funds(project["client_id"], to_user_id, amount)
 		
 #cond: this is called at the beginning after the bid is done
 #      the SU will withdraw the money and take 10% then give
@@ -804,7 +899,7 @@ def transfer_initial_bid_funds(from_user_id, to_user_id, amount = 10):
 	#takes money from the client
 	from_user["balance"] -= amount
 	#if it was because of the penalty
-	if to_user == 0:
+	if to_user_id == 0:
 		to_user["balance"] += amount
 		print("Penalty of $10 had been taken from client")
 	#else it was success
@@ -861,6 +956,8 @@ def get_submission(dst, project_id):
 	else:
 		#copies the file to file folder
 		shutil.copy(path, dst)
+	#set project status to complete when retrieved
+	jsonIO.set_value("project_db", project_id, "status", "complete")
 	#remove the project from the database
 	#jsonIO.set_value("project_db", project_id, "submission", "")
 	# if os.path.exists(path):
@@ -912,7 +1009,7 @@ def finalize_funds(project_id):
     if not project:
         print("Project does not exist")
         return 0
-    if project["status"] != "incomplete" and project["status"] != "complete":
+    if project["status"] != "incomplete" or project["status"] != "complete":
         print("Project was not set to complete or incomplete")
         return 0
     bid_log = get_chosen_bid(project_id)
@@ -942,37 +1039,45 @@ def finalize_funds(project_id):
 #pre:	must be called after incomplete project or after rating
 #post:	user's warning will increase depending on inputs
 #		check user's out_ratings and will increase warnings too
+#		users will be blacklisted if warnings reached to 2
 def set_warning(user_dict, prj_dict, rating = 'Nan'):
 	#grabs all user from project if it is in a team
 	if user_dict["team_id"] != 'Nan':
-		devs = []
-		for dev in jsonIO.get_value("team_db", user_dict["team_id"], "dev_ids"):
-			devs.append(jsonIO.get_row("user_db", dev))
+		users = []
+		for user in jsonIO.get_value("team_db", user_dict["team_id"], "dev_ids"):
+			users.append(jsonIO.get_row("user_db", user))
 	else:
-		devs = [user_dict]
+		users = [user_dict]
 	#check if project is in incomplete state
 	if prj_dict["status"] == "incomplete":
 		#increment warning
 		print("Project was incomplete")
-		for dev in devs:
-			dev["warning"] += 1
+		for user in users:
+			user["warning"] += 1
 	#check this user's average in rating
-	for dev in devs:
-		if get_grade(dev) <= 2 and len(dev["project_ids"]) >= 5:
+	for user in users:
+		if ez.get_grade(user) <= 2 and len(user["project_ids"]) >= 5:
 			print("User was given low average rating")
-			dev["warning"] += 1
+			user["warning"] += 1
 		#check this user's average out rating
-		out_rate = avg_out_rating(dev)
-		if out_rate < 2 and len(dev["project_ids"]) >= 8:
+		out_rate = avg_out_rating(user)
+		if out_rate < 2 and len(user["project_ids"]) >= 8:
 			print("User has given low average rating")
-			dev["warning"] += 1
-		elif out_rate > 4 and len(dev["project_ids"]) >= 8:
+			user["warning"] += 1
+		elif out_rate > 4 and len(user["project_ids"]) >= 8:
 			print("User has given high average rating")
-			dev["warning"] += 1
-		jsonIO.set_value("user_db", dev["id"], "warning", dev["warning"])
+			user["warning"] += 1
+		jsonIO.set_value("user_db", user["id"], "warning", user["warning"])
+		if user["warning"] >= 2:
+			user["status"] = "blacklisted"
 	
 	
-#/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINES/\/\/\/\ENGINEENGINES/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+
 #post: Uses the search engine to find name
 def search_matches(obj, input_name):
     matches = []
@@ -994,7 +1099,12 @@ def search_matches(obj, input_name):
     return matches	
 	
 	
-#/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+
 #pre: user exists in "user_db" ,and user can be a team, a developer, or a client
 #post: return average rating of the user
 def get_grade(user):
@@ -1071,7 +1181,13 @@ def avg_out_rating(user_dict):
         total += jsonIO.get_value("project_db", prj_id, rate_type)
     return round(total/len(user_dict["project_ids"]), 1)
 
-#/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\
+
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\HELPER FUNTIONS/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+
 #pre: must have a valid db, key and value
 #post: returns row of given key value
 def find_row(db, key, value):
@@ -1095,10 +1211,13 @@ def val_print(values):
     print (indents.format(*values))
 
 #post: updates now and returns now
-def get_now():
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
-    return now
+def get_now(dt = False):
+	now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+	if dt:
+		return dt_now
+	else:
+		return now
 	
 #pre: needs String in Y-m-d H:M:S form
 #post: returns datetime form
