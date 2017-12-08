@@ -1103,22 +1103,23 @@ def set_warning(user_dict, prj_dict, rating = 'Nan'):
 #post: Uses the search engine to find name
 def search_matches(obj, input_name):
     matches = []
-    if obj.get_all() == Project().get_all():
-        names = get_col(Project(), "title")
-    else:
-        names = get_col(obj, "name")
+    names = get_col(obj, "id")
     if input_name == "":
         for name in names:
             matches.append(name["id"])
     else:
         for name in names:
+            name = get_row(obj, name['id'])
             if obj.get_all() == Project().get_all():
                 if name["title"] == input_name:
                     matches.append(name["id"]) 
-            else: 
+            elif obj.get_all() == Issue().get_all():
+                if name["issue_desc"] == input_name and not name["resolved"]:
+                    matches.append(name["id"])
+            elif obj.get_all() == User().get_all():
                 if name["name"] == input_name:
                     matches.append(name["id"])
-    return matches	
+    return matches    
 	
 	
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
