@@ -13,19 +13,16 @@ from datetime import timedelta
 from tkinter import filedialog as fd
 import os
 
-
 class GUI():
 
     def __init__(self):
         self.origin = Tk()
         
         self.colors = ["white", "#C3CBDE", "#3b0c0c"] #white, blue, red 
-        top = ezcommands.rank("client")
-        print(top)
+
         self.top_three_teams_id = [0,1,2]
         self.top_three_devs_id = [1,2,3]
-        top = ezcommands.rank("client")
-        self.top_three_clients_id = [top[0]["id"],top[0]["id"],top[0]["id"]]
+        self.top_three_clients_id = [5,6,7]
         self.software_statistic = [170, 85, 85, 55, 2.88, 623]
         
         #Set up the general screen
@@ -487,7 +484,7 @@ class GUI():
         self.frame_profile.destroy()
         self.frame_profile = Frame(self.origin, bg = "white")
         self.frame_current = self.frame_profile
-        self.profile_type = 3
+        self.profile_type = 4
     
         button_accepts = Button (self.frame_profile, text = "Resolve Temp Status") #0
         button_dispute_warning = Button (self.frame_profile, text = "Resolve Warning Dispute") #1
@@ -507,7 +504,7 @@ class GUI():
         button_quit_req.grid(row = 0, column = 2)
         button_blacklist.grid(row = 0, column = 3)
         button_grade.grid(row = 0, column = 4)
-        
+        print(self.SU_state)
         if self.SU_state == 0: 
             label_title = Label(self.frame_profile, text = "Resolve Temp Status Page")
             matches = ezcommands.search_matches(Issue(), "new user")
@@ -527,7 +524,7 @@ class GUI():
         label_title.grid(row = 1, column = 0, columnspan = 5, sticky = E+W)
     
     def set_up_SU_pages(self, frame, list):
-        page_amount = math.ceil((len(list))/10)
+        page_amount = math.ceil((len(list))/3)
         if page_amount == 0:
             label_no_issue = Label(frame, text = "No Issues Found")
             label_no_issue.grid(row = 2, column = 0, columnspan = 5, sticky = E+W )
@@ -535,19 +532,19 @@ class GUI():
         amount = 0
         n = 0
         Index = self.project_index
-        if len(list)-Index >= 10:
-            amount = 10
+        if len(list)-Index >= 3:
+            amount = 3*(int((self.project_index/3))+1)
         else:
             amount = len(list)
         while(Index < amount):
             if self.SU_state >= 0 and self.SU_state < 4:
-                self.set_up_SU_generic(self.frame_profile, n+2, list[n])
+                self.set_up_SU_generic(self.frame_profile, n+2, list[Index])
             elif self.SU_state == 4:
-                self.set_up_SU_payment(self.frame_profile, n+2, list[n])
+                self.set_up_SU_payment(self.frame_profile, n+2, list[Index])
             n += 1
             Index = Index + 1
         
-        self.set_up_project_scroll(frame, int((self.project_index/10))+1, page_amount)
+        self.set_up_project_scroll(frame, int((self.project_index/3))+1, page_amount)
     
     def set_up_SU_generic(self, frame_pass, Row, id):
         statments = ["Temp user wishes to be part of the Turk System", "This user belvies they unfarily were given a warning and want it removed", 
@@ -592,7 +589,7 @@ class GUI():
         if dev['team_id'] == "Nan":
             name = dev['name']
         else:
-            team = get_team("team_db", dev['team_id'])
+            team = get_row("team_db", dev['team_id'])
             name = team['name']
         
         button_client = Button(frame, text = "Client: " + client['name'], bg =  self.colors[1])
@@ -692,7 +689,7 @@ class GUI():
             scroll.config(command=self.proflie_resume_text_box.yview)
             self.proflie_bio_entry.config(yscrollcommand=scroll_two.set)
             self.profile_name_entry.insert(0, self.logged_in_user["name"])
-            self.proflie_bio_entry.insert(END, self.logged_in_user["interest"])
+            self.proflie_bio_entry.insert(END, self.logged_in_user["interests"])
             self.proflie_resume_text_box.insert(END, self.logged_in_user["resume"])
             
             self.profile_name_entry.grid(row = 1, column = 1)
@@ -1099,6 +1096,8 @@ class GUI():
         if self.logged_in_user['id'] == self.profile_project["client_id"]:
             button_select = Button(bid_frame, text = "Pick", bg = self.colors[1])
             button_select.grid(row = Row, column = 1, sticky = E)
+            array = [self.profile_project['id'], indexed_log[1]]
+            button_select.bind("<Button-1>", lambda event, arg = array: self.choose_bid_button(event, arg))
             
         
         dev = get_row("user_db", indexed_log[1])
@@ -1166,7 +1165,7 @@ class GUI():
             label_description = Label(self.frame_profile, text = "Description " + project['desc'], justify= LEFT)
             
             if(project['status'] == "complete"):
-                label_dev_review = Label(self.frame_profile, text = "Developer Review of Client: " + project['client_review'], justify= LEFT)
+                label_dev_review = Label(self.frame_profile, text = "Developer Review of Client: " + project['team_review'], justify= LEFT)
                 label_cleint_review = Label(self.frame_profile, text = "Client Review of Developer: " + project['client_review'], justify= LEFT)
                 label_dev_review.grid(row = Row+2, column = 0, columnspan = 2, sticky = W+E+N+S)
                 label_cleint_review.grid(row = Row+3, column = 0, columnspan = 2, sticky = W+E+N+S)
@@ -1189,11 +1188,11 @@ class GUI():
                     button_team_name.grid(row = 0, column = 2, sticky = E+W)
                     button_team_name.bind("<Button-1>", lambda event, arg = team: self.team_button(event, arg))
                 else:
-                    button_developer_name = Buttpn(frame_profile_projects, text = "Developer: " + dev["name"] + "Grade " + str(project["team_rating"]), bg = "white")
+                    button_developer_name = Button(frame_profile_projects, text = "Developer: " + dev["name"] + "Grade " + str(project["team_rating"]), bg = "white")
                     button_developer_name.grid(row = 0, column = 2, sticky = E+W)
                     button_developer_name.bind("<Button-1>", lambda event, arg = dev: self.profile_button(event, arg))
                     
-                button_client = Button(frame_profile_projects, text = "Client: " + client["name"] + "Grade " + str(project['team_rating']), bg = "white")
+                button_client = Button(frame_profile_projects, text = "Client: " + client["name"] + "Grade " + str(project['client_rating']), bg = "white")
                 button_client.bind("<Button-1>", lambda event, arg = client: self.profile_button(event, arg))
                 button_client.grid(row = 0, column = 1, sticky = W+E+N+S) 
                 label_project_name = Label(frame_profile_projects, text = "Project Name: "  + project["title"] + " ", bg = "white")  
@@ -1213,7 +1212,7 @@ class GUI():
                 button_project_name = Button(frame_profile_projects, text = "Project Name: "  + project["title"] + " ", bg = "white")  
                 button_project_name.grid(row = 0, column = 0, sticky = W+E+N+S) 
                 label_owner_name = Label(frame_profile_projects, text = "Client: " + client["name"] , bg = "white")
-                label_owner_grade = Label(frame_profile_projects, text = "Grade " + str(project['team_rating'])+ " |" , bg = "white")
+                label_owner_grade = Label(frame_profile_projects, text = "Grade " + str(project['client_rating'])+ " |" , bg = "white")
                 label_owner_name.grid(row = 0, column = 1, sticky = W+E+N+S) 
                 label_owner_grade.grid(row = 0, column = 2, sticky = W+E+N+S)
                 button_project_name.bind("<Button-1>", lambda event, arg = id: self.project_button(event, arg))
@@ -1285,6 +1284,8 @@ class GUI():
         if self.logged_in_user["warning"] == 2:
             self.logged_in_user["status"] = "blacklisted"
             set_row("user_db", self.logged_in_user)
+        if self.logged_in_user['status'] == "SU":
+            self.set_up_top_user_chart()
         self.frame_logged_in.grid_forget()
         self.logged_in_user = {"id" : "", "name": "", "interest": "", "team_id" : "Nan", "user_type" : ""} 
         self.proflie_state = 0
@@ -1375,6 +1376,9 @@ class GUI():
         elif self.profile_type == 2:
             self.project_index -= 5
             self.set_up_project_profile()
+        elif self.profile_type == 4:
+            self.project_index -= 3
+            self.set_up_super_user()
         
         
     def project_right(self, event):
@@ -1390,6 +1394,9 @@ class GUI():
         elif self.profile_type == 2:
             self.project_index += 5
             self.set_up_project_profile()
+        elif self.profile_type == 4:
+            self.project_index += 3
+            self.set_up_super_user()
             
     def create_button_account(self,event):
         if self.var.get() == 0:
@@ -1412,7 +1419,7 @@ class GUI():
             datetime_object = datetime_object + timedelta(days=int(self.entry_time.get()))
             datetime_object = datetime_object.strftime("%Y-%m-%d %H:%M:%S")
             
-            bid  = ezcommands.create_bid(project["id"], datetime_object, int(self.entry_money.get())) #project_id, end_date, initial_bid, start_date = now
+            bid  = ezcommands.create_bid(project["client_id"], project["id"], datetime_object, int(self.entry_money.get())) #project_id, end_date, initial_bid, start_date = now
             if bid != "Nan":
                 project["bid_id"] = project['id']
                 set_row("project_db", project)
@@ -1422,15 +1429,10 @@ class GUI():
             else:
                 del_row("project_db", project['id'])
                     
-        elif self.entry_money.get() == "" or  self.entry_time.get() == "" or  float(self.entry_money.get()) > self.profile_user['balance']:
-            print("Bid Incomplete:\nPlease fill out the bid criteria")
         elif self.entry_money.get():
             print("Bid Incomplete:\nPlease enter how what monetray rewards you are willing to complete the project for")
         elif self.entry_time.get() == "":
             print("Bid Incomplete:\nPlease enter how many days you will take to complete project")
-                
-        elif self.entry_name.get() == "" and self.entry_desc.get("1.0",END) != "":
-            print("Bid Incomplete:\nPlease fill out the bid criteria")
         elif self.entry_desc.get("1.0",END) != "":
             print("Bid Incomplete:\nPlease enter the description for the project")
         elif self.entry_name.get() == "":
@@ -1439,11 +1441,12 @@ class GUI():
     def create_button_bid(self,event):
         self_log = ezcommands.get_bid_log(self.profile_project['id'])
         if self.entry_time.get() != "" and self.entry_money.get() != "" :
+            
             datetime_object = datetime.strptime(self.profile_project["bid_end_date"],"%Y-%m-%d %H:%M:%S")
             datetime_object = datetime_object + timedelta(days=int(self.entry_time.get()))
             if datetime_object <= datetime.strptime(self_log[0][3],"%Y-%m-%d %H:%M:%S") and int(self.entry_money.get()) <= self_log[0][2]:
                 datetime_object = datetime_object.strftime("%Y-%m-%d %H:%M:%S")
-                log  = ezcommands.create_bid(self.profile_project["id"], datetime_object, int(self.entry_money.get())) #project_id, end_date, initial_bid, start_date = now
+                log  = ezcommands.create_bid(self.logged_in_user['id'], self.profile_project["id"], datetime_object, int(self.entry_money.get())) #project_id, end_date, initial_bid, start_date = now
                 if log != "Nan":
                     bid = get_row("bid_db", self.profile_project['id'])
                     bid['bid_log'] = log
@@ -1505,6 +1508,10 @@ class GUI():
         ezcommands.demote(self.profile_team, id)
         self.set_up_team_profile()
     
+    def choose_bid_button(self, event, array):
+        ezcommands.choose_bid(array[0],array[1]) #choose_bid(bid_id, dev_id, reason = "lowest bidder"): modifies bid_db and changes states
+        self.set_up_project_profile()
+        
     def find_path(self, event):
         self.path = fd.askopenfilename()
         self.set_up_project_profile()
@@ -1512,18 +1519,16 @@ class GUI():
     def claim(self, event):
         if self.entry_grade != "Nan" and self.text_review != "Nan" and int(self.entry_grade.get()) > 0 and int(self.entry_grade.get()) < 5:
             ezcommands.submit(os.path.dirname(self.path), os.path.basename(self.path) , self.profile_project['id'])
-            self.profile_project["status"] = 'complete'
-            ezcommands.make_rating(self.logged_in_user['id'], float(self.entry_grade.get()),self.text_review.get("1.0",END))
-            set_row("project_db", self.profile_project)
+            project = ezcommands.make_rating(self.logged_in_user['id'], float(self.entry_grade.get()),self.text_review.get("1.0",END))
+            set_row("project_db", project)
             
         self.set_up_project_profile()
         
     def submit_file(self, event):
         if self.path != "Nan" and self.entry_grade != "Nan" and self.text_review != "Nan" and int(self.entry_grade.get()) > 0 and int(self.entry_grade.get()) < 5 :
             ezcommands.submit(os.path.dirname(self.path), os.path.basename(self.path) , self.profile_project['id'])
-            self.profile_project["status"] = 'submitted'
-            ezcommands.make_rating(self.logged_in_user['id'], float(self.entry_grade.get()),self.text_review.get("1.0",END))
-            set_row("project_db", self.profile_project)
+            project = ezcommands.make_rating(self.logged_in_user['id'], float(self.entry_grade.get()),self.text_review.get("1.0",END))
+            set_row("project_db", project)
             
         self.set_up_project_profile()
         
