@@ -118,6 +118,7 @@ Metrics
 		by all projects from user/ team
 	bayesian_avg(user, m, c): returns the bayesian average of the user's grade(rating)
 	avg_out_rating(user_dict): returns average out rating from a user
+	total_user(user_type): returns the total number of rows if user_type is one of 'dev', 'client', or 'team'
 -------------------------------------------------------------------------------------
 Helper functions
 	find_row(db, key, value): returns row of given key value
@@ -1282,6 +1283,21 @@ def avg_out_rating(user_dict):
     for prj_id in user_dict["project_ids"]:
         total += jsonIO.get_value("project_db", prj_id, rate_type)
     return round(total/len(user_dict["project_ids"]), 1)
+
+# pre: user_type is either 'dev', 'client', or 'team'
+# post: returns the total number of rows if user_type is one of above.
+#       otherwise, return 0
+def total_user(user_type):
+    user_number = 0 # total number of users
+    if(user_type == 'dev'):
+        developers = list(filter(lambda row: row['user_type'] == 'dev', jsonIO.read_rows("user_db")))
+        user_number = len(developers)
+    elif(user_type == 'client'):        
+        clients = list(filter(lambda row: row['user_type'] == 'client', jsonIO.read_rows("user_db")))
+        user_number = len(clients)
+    elif(user_type == 'team'):
+        user_number = jsonIO.total_rows("team_db")
+    return user_number
 
 
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
