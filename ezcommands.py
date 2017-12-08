@@ -201,7 +201,7 @@ def get_col(obj, key):
         if attrib!= None:
             array.append({"id": id, key: attrib})
     return array
-#####***************************might break at bid_log call*************	
+####***************************might break at bid_log call*************	
 #pre: any DB array	
 #post: print table
 def print_table(m):
@@ -279,21 +279,20 @@ def verify(username, password = None):
 			case = 3
 			message = "Username not found"
 		elif user["status"] == "blacklisted":
-			
-			case = 4
-			message = "User found but blacklisted"
+			if(verify_blacklisted(user["id"])):
+				case = 12
+				message = "Welcome back, you are no longer blacklisted"
+			else:
+				case = 4
+				message = "User found but blacklisted"
 		elif user["status"] == "inactive":
 			case = 5
 			message = "User found but deactivated"
 		elif password == None:
 			if user["warning"] >= 2:
 				if user["status"] != "blacklisted":
-					if(verify_blacklisted(user["id"])):
-						case = 12
-						message = "Welcome back, you are no longer blacklisted"
-					else:
-						case = 6
-						message = "User found, but has 2 warnings and not yet blacklisted"
+					case = 6
+					message = "User found, but has 2 warnings and not yet blacklisted"
 				#blacklisted already checked
 			elif user["status"] == "rejected":
 				case = 7
