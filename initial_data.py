@@ -121,7 +121,7 @@ order products or services from e-commerce websites, or to participate in online
 providers use direct text marketing to send messages to mobile users about promotions, payment due dates,
 and other notifications instead of using postal mail, email, or voicemail.''')
 
-	super_user.new_user(name = "System Admin", username = "admin", password = "pass", user_type = "admin",  balance = 100)
+	super_user.new_user(name = "System Admin", username = "admin", password = "pass", user_type = "SU",  balance = 100)
 	user1.new_user(name = "controlled", username = "controlled", password = "controlled", user_type = "dev", balance = 10, resume = resume)
 	user2.new_user(name = "Jane Doe", username = "isa", password = 'cat', user_type = "dev", balance = 20, project_ids = [2], team_id = 2)
 	user3.new_user(name = "Cow", username = "can", password = 'code?', user_type = "dev", balance = 30)

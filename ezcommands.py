@@ -100,7 +100,6 @@ Bid and Project Process
 		completion/ incompletion of project
 	set_warning(user_dict, prj_dict, rating = 'Nan'): user's warning will increase depending on inputs
 		check user's out_ratings and will increase warnings too
-		sets user's status to "blacklisted" if warning == 2
 -------------------------------------------------------------------------------------
 Engines
 	search_matches(obj, input_name): Uses the search engine to find name
@@ -280,16 +279,21 @@ def verify(username, password = None):
 			case = 3
 			message = "Username not found"
 		elif user["status"] == "blacklisted":
+			
 			case = 4
 			message = "User found but blacklisted"
 		elif user["status"] == "inactive":
 			case = 5
 			message = "User found but deactivated"
 		elif password == None:
-			if user["warning"] == 2:
+			if user["warning"] >= 2:
 				if user["status"] != "blacklisted":
-					case = 6
-					message = "User found, but has 2 warnings and not yet blacklisted"
+					if(verify_blacklisted(user["id"])):
+						case = 12
+						message = "Welcome back, you are no longer blacklisted"
+					else:
+						case = 6
+						message = "User found, but has 2 warnings and not yet blacklisted"
 				#blacklisted already checked
 			elif user["status"] == "rejected":
 				case = 7
@@ -301,7 +305,7 @@ def verify(username, password = None):
 		elif user["password"] != password:
 			case = 9
 			message = "Your password does not match"
-		elif user["warning"] == 2:
+		elif user["warning"] >= 2:
 			if user["status"] != "blacklisted":
 				case = 10
 				message = "Login successful, but has 2 warnings and not yet blacklisted"
@@ -313,6 +317,27 @@ def verify(username, password = None):
 			message = "Login successful"
 	print(message)
 	return [case, user, message]
+	
+#cond:	verify when he was last blacklisted in task and make him active again
+#post:	reset user's status and warnings and returns true if it was done so
+def verify_blacklisted(user_id):
+    #find all taks with use's id in issue's reffered_id
+    issues = jsonIO.get_rows("issue_db", "referred_id", user_id)
+    if not issues:
+        print("User not found")  
+    #see if the issue is blacklisted and compare time to now
+    for issue in issues:
+        date = issue["date_resolved"]
+        if date:
+            print(issue)
+            one_year = ez.string_to_datetime(date) + timedelta(days=365)
+            if issue["issue_desc"] == "blacklisted" and one_year <= ez.get_now(True):
+                #if it has been 1 year since blacklisting set to active and warnings to o
+                jsonIO.set_value("user_db", user_id, "status", "active")
+                jsonIO.set_value("user_db", user_id, "warning", 0)
+                jsonIO.del_row("issue_db", issue["id"])
+                return 1
+    return 0
 	
 #cond:
 #pre:#check if balance == 0
@@ -625,7 +650,7 @@ def erase_empty_team(team_id):
 	return 1
 
 #pre: team and user must exit
-#pro: will remove user from team and update both user and team db
+#post: will remove user from team and update both user and team db
 def kick(team_dict, user_id):
 	team_dict["dev_ids"].remove(user_id)
 	user = jsonIO.get_row("user_db", user_id)
@@ -1039,7 +1064,6 @@ def finalize_funds(project_id):
 #pre:	must be called after incomplete project or after rating
 #post:	user's warning will increase depending on inputs
 #		check user's out_ratings and will increase warnings too
-#		users will be blacklisted if warnings reached to 2
 def set_warning(user_dict, prj_dict, rating = 'Nan'):
 	#grabs all user from project if it is in a team
 	if user_dict["team_id"] != 'Nan':
@@ -1068,8 +1092,6 @@ def set_warning(user_dict, prj_dict, rating = 'Nan'):
 			print("User has given high average rating")
 			user["warning"] += 1
 		jsonIO.set_value("user_db", user["id"], "warning", user["warning"])
-		if user["warning"] >= 2:
-			user["status"] = "blacklisted"
 	
 	
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
@@ -1268,7 +1290,7 @@ def tranfer_funds(from_user_id, to_user_id, amount):
 	return 1
 
 #pre: user must exist
-#pro: check if user is active
+#post: check if user is active
 def is_in_active_project(user):
    if len(user["project_ids"]) > 0:
        id = user["project_ids"][len(user["project_ids"]) - 1]
