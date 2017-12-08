@@ -58,6 +58,7 @@ Class Creation
 	user_exists(username): returns 1 if user exist else returns 0
 	register_user(name, username, password, user_type, deposit):
 		places new temp_user in SU tasks
+	create_team(admin_ids, dev_ids, name, pic, desc):
 	create_bid(project_id, end_date, initial_bid, start_date = now):
 	create_project(client_id, title, desc, deadline):
 		will return and make a new project
@@ -104,6 +105,8 @@ Bid and Project Process
 -------------------------------------------------------------------------------------
 Engines
 	search_matches(obj, input_name): Uses the search engine to find name
+	recommendation(user_dict): will suggest client a dev, and for dev a project
+		returns in this format [dict(of user/project), list of matching interests]
 	*not made*rank(): Ranks first three, will use bayesian to accomplish that
 -------------------------------------------------------------------------------------
 Metrics
@@ -330,8 +333,8 @@ def verify_blacklisted(user_id):
         date = issue["date_resolved"]
         if date:
             print(issue)
-            one_year = ez.string_to_datetime(date) + timedelta(days=365)
-            if issue["issue_desc"] == "blacklisted" and one_year <= ez.get_now(True):
+            one_year = string_to_datetime(date) + timedelta(days=365)
+            if issue["issue_desc"] == "blacklisted" and one_year <= get_now(True):
                 #if it has been 1 year since blacklisting set to active and warnings to o
                 jsonIO.set_value("user_db", user_id, "status", "active")
                 jsonIO.set_value("user_db", user_id, "warning", 0)
@@ -450,22 +453,22 @@ def fsm_project(project_id):
         return 0
     if project["status"] == "bidding":
         #check if bid is over
-        if ez.bid_timeout(project_id):
-            if len(ez.get_bid_log(project_id)) <= 1:
+        if bid_timeout(project_id):
+            if len(get_bid_log(project_id)) <= 1:
                 jsonIO.set_value("project_db", project_id, "status", "no bid")
             else:
                 jsonIO.set_value("project_db", project_id, "status", "active")
-            ez.end_bid(project_id)
+            end_bid(project_id)
         else:
             return 0
     elif project["status"] == "active":
         #check if the project is over
-        if ez.string_to_datetime(project["deadline"]) <= ez.get_now(True):
+        if string_to_datetime(project["deadline"]) <= get_now(True):
             if project["submission"]:
                 jsonIO.set_value("project_db", project_id, "status", "submitted")
             else:
                 jsonIO.set_value("project_db", project_id, "status", "incomplete")
-            ez.finalize_funds(project_id)
+            finalize_funds(project_id)
         else:
             return 0
     # this should be covered by when customer gets project
@@ -525,6 +528,18 @@ def register_user(name, username, password, user_type, deposit):
         #this was when deposit was not right syntax
         except ValueError:
             return "That is not a valid deposit"
+
+#post:	creates a new team
+def create_team(admin_id, name, desc):
+	#check if name field is filled
+	if not name:
+		return "must give a team name"
+	#check if desc is filled
+	if not desc:
+		return "must give a team description"
+	#create a new team
+	team = Team(admin_ids = [admin_id], dev_ids = [admin_id], name = name, desc = desc)
+	return team
 
 #pre: needs all the entries filled and an existing client id
 #post: will return and make a new project, and add project_id to client
@@ -726,22 +741,22 @@ def fsm_project(project_id):
         return 0
     if project["status"] == "bidding":
         #check if bid is over
-        if ez.bid_timeout(project_id):
-            if len(ez.get_bid_log(project_id)) <= 1:
+        if bid_timeout(project_id):
+            if len(get_bid_log(project_id)) <= 1:
                 jsonIO.set_value("project_db", project_id, "status", "no bid")
             else:
                 jsonIO.set_value("project_db", project_id, "status", "active")
-            ez.end_bid(project_id)
+            end_bid(project_id)
         else:
             return 0
     elif project["status"] == "active":
         #check if the project is over
-        if ez.string_to_datetime(project["deadline"]) <= ez.get_now(True):
+        if string_to_datetime(project["deadline"]) <= get_now(True):
             if project["submission"]:
                 jsonIO.set_value("project_db", project_id, "status", "submitted")
             else:
                 jsonIO.set_value("project_db", project_id, "status", "incomplete")
-            ez.finalize_funds(project_id)
+            finalize_funds(project_id)
         else:
             return 0
     # this should be covered by when customer gets project
@@ -1080,7 +1095,7 @@ def set_warning(user_dict, prj_dict, rating = 'Nan'):
 			user["warning"] += 1
 	#check this user's average in rating
 	for user in users:
-		if ez.get_grade(user) <= 2 and len(user["project_ids"]) >= 5:
+		if get_grade(user) <= 2 and len(user["project_ids"]) >= 5:
 			print("User was given low average rating")
 			user["warning"] += 1
 		#check this user's average out rating
@@ -1119,9 +1134,29 @@ def search_matches(obj, input_name):
             elif obj.get_all() == User().get_all():
                 if name["name"] == input_name:
                     matches.append(name["id"])
-    return matches    
-	
-	
+    return matches
+
+#post: 	will recommend a dev a project and a client a dev
+#		returns in this format [dict(of user/project), list of matching interests]
+def recommendation(user_dict):
+    interest_list = []
+    #get all "active" users who are not the same user_type with the same interest
+    for user in jsonIO.read_rows("user_db"):
+        #if active, not same user type, and not the same person
+        if user["status"] == "active" and user["user_type"] != user_dict["user_type"] and user["id"] != user_dict["id"]:
+            interests = list(set(user["interests"]).intersection(user_dict["interests"]))
+            #if matching interests
+            if interests:
+                #if client, get list of "active" devs and interest
+                if user_dict["user_type"] == "client":
+                    interest_list.append([user,interests])
+                #if dev, get list of "bidding" projects and interest
+                else:
+                    project = jsonIO.get_row("project_db", user["project_ids"][-1])
+                    #check if bidding
+                    if project["status"] == "bidding":
+                        interest_list.append([project,interests])
+    return interest_list
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 #/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\/\/\/\/\/\

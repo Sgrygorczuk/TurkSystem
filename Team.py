@@ -4,7 +4,7 @@ class Team:
 	db = "team_db"
 	
 	def __init__(self, admin_ids = [], dev_ids = [], name = "", pic = "", desc = "",
-		project_ids = [], active_project= "", join_request_ids = [], status = ""):
+		project_ids = [], active_project= "", join_request_ids = [], status = "active"):
 		self.id = 'Nan'
 		#might call new_team later on
 		self.new_team(admin_ids, dev_ids, name, pic, desc, project_ids, active_project, join_request_ids, status)
