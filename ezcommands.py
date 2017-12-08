@@ -107,7 +107,8 @@ Engines
 	search_matches(obj, input_name): Uses the search engine to find name
 	recommendation(user_dict): will suggest client a dev, and for dev a project
 		returns in this format [dict(of user/project), list of matching interests]
-	*not made*rank(): Ranks first three, will use bayesian to accomplish that
+	rank(user_type): Returns a list of top three users as row format in the user_type 
+		using bayesian average the user_type can be one of [‘team’, ‘dev’, ‘client’]
 -------------------------------------------------------------------------------------
 Metrics
 	get_grade(user): returns the average rating of dev, team, or client
@@ -1157,6 +1158,40 @@ def recommendation(user_dict):
                     if project["status"] == "bidding":
                         interest_list.append([project,interests])
     return interest_list
+
+# pre: user_type can be one of [‘team’, ‘dev’, ‘client’]
+# post: returns a list of top three users(rows)in the user_type 
+#       (using bayesian average).
+def rank(user_type): 
+    if user_type not in ['dev', 'client', 'team']:
+        return []
+    
+    top3 = []
+
+    # arguemnts for bayesian_avg()
+    m,c = get_m_c(user_type)
+    
+    # read the rows from database file
+    DB = 'user_db'
+    if (user_type == 'team'):
+        DB = 'team_db'
+    users = jsonIO.read_rows(DB)
+
+    if users: # if any row exist in the database
+        if (user_type == 'team'):
+            users_with_grade = list(filter(lambda user: get_grade(user) > 0, users))
+        else:
+            users_with_grade = list(filter(lambda user: get_grade(user) > 0 and user['user_type'] == user_type, users))
+            
+    # find top 3 bayesian average grade among the user_type
+    id_grade_tuples = [] # [(id,grade), ...]
+    if len(users_with_grade) > 0:
+        for user in users_with_grade:
+            id_grade_tuples.append((user['id'], bayesian_avg(user, m, c)))
+        top3_tuples = sorted(id_grade_tuples, key=lambda pair: pair[1])[-1:-4:-1]
+        top3 = list(map(lambda tup: jsonIO.get_row(DB, tup[0]), top3_tuples))
+        
+    return top3
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 #/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 #/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\METRICS/\/\/\/\/\/\/\/\/\
