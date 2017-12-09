@@ -12,13 +12,20 @@ from random import randint
 #run(reset = 0):    creates classes and can reset our data
 #reload(): reloads the classes from db
 
+total_users = 65
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
 dt_later = dt_now + timedelta(days=1)
 later = dt_later.strftime("%Y-%m-%d %H:%M:%S")
-def n_days(n = 1):
-	now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+def n_days(n = 1, time = None):
+	if time:
+		now = time
+	else:
+		now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	if n < 1:
+		dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S") - timedelta(days = -n)
+	else:
+		dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S") + timedelta(days = n)
 	next_days = dt_now.strftime("%Y-%m-%d %H:%M:%S")
 	return next_days
 
@@ -171,6 +178,41 @@ bid12 = Bid()
 bid13 = Bid()
 bid14 = Bid()
 bid15 = Bid()
+bid16 = Bid()
+bid17 = Bid()
+bid18 = Bid()
+bid19 = Bid()
+bid20 = Bid()
+bid21 = Bid()
+bid22 = Bid()
+bid23 = Bid()
+bid24 = Bid()
+bid25 = Bid()
+bid26 = Bid()
+bid27 = Bid()
+bid28 = Bid()
+bid29 = Bid()
+bid30 = Bid()
+bid31 = Bid()
+bid32 = Bid()
+bid33 = Bid()
+bid34 = Bid()
+bid35 = Bid()
+bid36 = Bid()
+bid37 = Bid()
+bid38 = Bid()
+bid39 = Bid()
+bid40 = Bid()
+bid41 = Bid()
+bid42 = Bid()
+bid43 = Bid()
+bid44 = Bid()
+bid45 = Bid()
+bid46 = Bid()
+bid47 = Bid()
+bid48 = Bid()
+bid49 = Bid()
+bid50 = Bid()
 
 issue0 = Issue()
 issue1 = Issue()
@@ -179,6 +221,13 @@ issue3 = Issue()
 
 def reload(reset = 0):
 	super_user.load_db(0)
+	reload_users()
+	reload_teams()
+	reload_projects()
+	reload_bids()
+	reload_issues()
+
+def reload_users():
 	user1.load_db(1)
 	user2.load_db(2)
 	user3.load_db(3)
@@ -229,18 +278,6 @@ def reload(reset = 0):
 	user48.load_db(48)
 	user49.load_db(49)
 	
-	team0.load_db(0)
-	team1.load_db(1)
-	team2.load_db(2)
-	team3.load_db(3)
-	team4.load_db(4)
-	team5.load_db(5)
-	team6.load_db(6)
-	team7.load_db(7)
-	team8.load_db(8)
-	team9.load_db(9)
-	team10.load_db(10)
-
 	client0.load_db(50)
 	client1.load_db(51)
 	client2.load_db(52)
@@ -257,7 +294,21 @@ def reload(reset = 0):
 	client13.load_db(63)
 	client14.load_db(64)
 	client15.load_db(65)
+	
+def reload_teams():
+	team0.load_db(0)
+	team1.load_db(1)
+	team2.load_db(2)
+	team3.load_db(3)
+	team4.load_db(4)
+	team5.load_db(5)
+	team6.load_db(6)
+	team7.load_db(7)
+	team8.load_db(8)
+	team9.load_db(9)
+	team10.load_db(10)
 
+def reload_projects():
 	project0.load_db(0)
 	project1.load_db(1)
 	project2.load_db(2)
@@ -309,24 +360,59 @@ def reload(reset = 0):
 	project48.load_db(48)
 	project49.load_db(49)
 	project50.load_db(50)
-
+def reload_bids():
 	bid0.load_db(0)
 	bid1.load_db(1)
 	bid2.load_db(2)
 	bid3.load_db(3)
 	bid4.load_db(4)
-	bid5.load_db(55)
-	bid6.load_db(56)
-	bid7.load_db(57)
-	bid8.load_db(58)
-	bid9.load_db(59)
-	bid10.load_db(60)
-	bid11.load_db(61)
-	bid12.load_db(62)
-	bid13.load_db(63)
-	bid14.load_db(64)
-	bid15.load_db(65)
-	
+	bid5.load_db(5)
+	bid6.load_db(6)
+	bid7.load_db(7)
+	bid8.load_db(8)
+	bid9.load_db(9)
+	bid10.load_db(10)
+	bid11.load_db(11)
+	bid12.load_db(12)
+	bid13.load_db(13)
+	bid14.load_db(14)
+	bid15.load_db(15)
+	bid16.load_db(16)
+	bid17.load_db(17)
+	bid18.load_db(18)
+	bid19.load_db(19)
+	bid20.load_db(20)
+	bid21.load_db(21)
+	bid22.load_db(22)
+	bid23.load_db(23)
+	bid24.load_db(24)
+	bid25.load_db(25)
+	bid26.load_db(26)
+	bid27.load_db(27)
+	bid28.load_db(28)
+	bid29.load_db(29)
+	bid30.load_db(30)
+	bid31.load_db(31)
+	bid32.load_db(32)
+	bid33.load_db(33)
+	bid34.load_db(34)
+	bid35.load_db(35)
+	bid36.load_db(36)
+	bid37.load_db(37)
+	bid38.load_db(38)
+	bid39.load_db(39)
+	bid40.load_db(40)
+	bid41.load_db(41)
+	bid42.load_db(42)
+	bid43.load_db(43)
+	bid44.load_db(44)
+	bid45.load_db(45)
+	bid46.load_db(46)
+	bid47.load_db(47)
+	bid48.load_db(48)
+	bid49.load_db(49)
+	bid50.load_db(50)
+def reload_issues():
 	issue0.load_db(0)
 	issue1.load_db(1)
 	issue2.load_db(2)
@@ -380,8 +466,8 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	user7.new_user(name = "u7", username = "u7", password = 'u7', user_type = "dev", balance = 70, interests = ["games", "web", "mobile", "internet"], status = "active")
 	user8.new_user(name = "u8", username = "u8", password = 'u8', user_type = "dev", balance = 80, interests = ["radio", "web", "statistics", "internet"], status = "active", warning = 1)
 	user9.new_user(name = "u9", username = "u9", password = 'u9', user_type = "dev", balance = 90, interests = ["mobile", "web", "mobile", "internet"], status = "active")
-	user10.new_user(name = "u10", username = "u10", password = 'u10', user_type = "dev", balance = 100, interests = ["AI", "food", "money", "stocks"], status = "bidding")
-	user11.new_user(name = "u11", username = "u11", password = 'u11', user_type = "dev", balance = 110, interests = ["games", "web", "radio", "web"], status = "bidding")
+	user10.new_user(name = "u10", username = "u10", password = 'u10', user_type = "dev", balance = 100, interests = ["AI", "food", "money", "stocks"], status = "active")
+	user11.new_user(name = "u11", username = "u11", password = 'u11', user_type = "dev", balance = 110, interests = ["games", "web", "radio", "web"], status = "active")
 	user12.new_user(name = "u12", username = "u12", password = 'u12', user_type = "dev", balance = 120, interests = ["security", "web", "mobile", "internet"], status = "bidding")
 	user13.new_user(name = "u13", username = "u13", password = 'u13', user_type = "dev", balance = 130, interests = ["comedy", "radio", "security", "internet"], status = "bidding")
 	user14.new_user(name = "u14", username = "u14", password = 'u14', user_type = "dev", balance = 140, interests = ["interent", "web", "mobile", "games"], status = "active")
@@ -391,17 +477,17 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	user18.new_user(name = "u18", username = "u18", password = 'u18', user_type = "dev", balance = 130, interests = ["comedy", "radio", "security", "internet"], status = "active")
 	user19.new_user(name = "u19", username = "u19", password = 'u19', user_type = "dev", balance = 140, interests = ["interent", "web", "mobile", "games"], status = "active")
 	user20.new_user(name = "u20", username = "u20", password = 'u20', user_type = "dev", balance = 150, interests = ["data", "web", "games", "internet"], status = "active")
-	user21.new_user(name = "u21", username = "u21", password = 'u21', user_type = "dev", balance = 110, interests = ["games", "web", "radio", "web"], status = "bidding")
+	user21.new_user(name = "u21", username = "u21", password = 'u21', user_type = "dev", balance = 110, interests = ["games", "web", "radio", "web"], status = "active")
 	user22.new_user(name = "u22", username = "u22", password = 'u22', user_type = "dev", balance = 120, interests = ["security", "web", "mobile", "internet"], status = "bidding")
 	user23.new_user(name = "u23", username = "u23", password = 'u23', user_type = "dev", balance = 130, interests = ["comedy", "radio", "security", "internet"], status = "bidding")
-	user24.new_user(name = "u24", username = "u24", password = 'u24', user_type = "dev", balance = 140, interests = ["interent", "web", "mobile", "games"], status = "active")
-	user25.new_user(name = "u25", username = "u25", password = 'u25', user_type = "dev", balance = 150, interests = ["data", "web", "games", "internet"], status = "active", warning = 2)
+	user24.new_user(name = "u24", username = "u24", password = 'u24', user_type = "dev", balance = 140, interests = ["interent", "web", "mobile", "games"], status = "bidding")
+	user25.new_user(name = "u25", username = "u25", password = 'u25', user_type = "dev", balance = 150, interests = ["data", "web", "games", "internet"], status = "bidding", warning = 2)
 	
 	user26.new_user(name = "u26", username = "u26", password = 'u26', user_type = "dev", balance = 110, interests = ["games", "web", "radio", "web"], status = "bidding")
 	user27.new_user(name = "u27", username = "u27", password = 'u27', user_type = "dev", balance = 120, interests = ["security", "web", "mobile", "internet"], status = "bidding")
-	user28.new_user(name = "u28", username = "u28", password = 'u28', user_type = "dev", balance = 130, interests = ["comedy", "radio", "security", "internet"], status = "bidding")
-	user29.new_user(name = "u29", username = "u29", password = 'u29', user_type = "dev", balance = 140, interests = ["interent", "web", "mobile", "games"], status = "bidding")
-	user30.new_user(name = "u30", username = "u30", password = 'u30', user_type = "dev", balance = 150, interests = ["data", "web", "games", "internet"], status = "bidding")
+	user28.new_user(name = "u28", username = "u28", password = 'u28', user_type = "dev", balance = 130, interests = ["comedy", "radio", "security", "internet"], status = "active")
+	user29.new_user(name = "u29", username = "u29", password = 'u29', user_type = "dev", balance = 140, interests = ["interent", "web", "mobile", "games"], status = "active")
+	user30.new_user(name = "u30", username = "u30", password = 'u30', user_type = "dev", balance = 150, interests = ["data", "web", "games", "internet"], status = "active")
 	
 	user31.new_user(name = "u31", username = "u31", password = 'u31', user_type = "dev", balance = 110, interests = ["games", "web", "radio", "web"], status = "temp")
 	user32.new_user(name = "u32", username = "u32", password = 'u32', user_type = "dev", balance = 120, interests = ["security", "web", "mobile", "internet"], status = "temp")
@@ -432,46 +518,46 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	#################################################################################################################
 	#################################################################################################################
 	#turksystem
-	team0.new_team(admin_ids = [1], dev_ids = [1,2,3,4], name = "REDS") 
+	team0.new_team(admin_ids = [1], dev_ids = [1,2,3,4], name = "REDS") #project_status = complete
 	user1.set_team_id(0)
 	user2.set_team_id(0)
 	user3.set_team_id(0)
 	user4.set_team_id(0)
-	#14,24,25 could be by themselves
-	team1.new_team(admin_ids = [5], dev_ids = [5,15,20], name = "WallStreet, where many things can go wrong")
+	#28,29,30 could be by themselves
+	team1.new_team(admin_ids = [5], dev_ids = [5,15,20], name = "WallStreet, where many things can go wrong") #complete
 	user5.set_team_id(1)
 	user15.set_team_id(1)
 	user20.set_team_id(1)
-	team2.new_team(admin_ids = [6], dev_ids = [6,16], name = "One Cow Team")
+	team2.new_team(admin_ids = [6], dev_ids = [6,16], name = "One Cow Team") #complete
 	user6.set_team_id(2)
 	user16.set_team_id(2)
-	team3.new_team(admin_ids = [7], dev_ids = [7,17], name = "Big")
+	team3.new_team(admin_ids = [7], dev_ids = [7,17], name = "Big") #complete
 	user7.set_team_id(3)
 	user17.set_team_id(3)
-	team4.new_team(admin_ids = [8], dev_ids = [8,18], name = "Sad life")
+	team4.new_team(admin_ids = [8], dev_ids = [8,18], name = "Sad life") #complete
 	user4.set_team_id(4)
 	user4.set_team_id(4)
-	team5.new_team(admin_ids = [9], dev_ids = [9,19], name = "Rainbow Darkness")
+	team5.new_team(admin_ids = [9], dev_ids = [9,19], name = "Rainbow Darkness") #incomplete
 	user9.set_team_id(5)
 	user19.set_team_id(5)
 	
-	team6.new_team(admin_ids = [10,21], dev_ids = [10,21], name = "This")
+	team6.new_team(admin_ids = [10,14], dev_ids = [10,14], name = "This") #active
 	user10.set_team_id(6)
-	user21.set_team_id(6)
-	team7.new_team(admin_ids = [11], dev_ids = [11,22], name = "Group")
+	user14.set_team_id(6)
+	team7.new_team(admin_ids = [11], dev_ids = [11,21], name = "Group") #active 
 	user11.set_team_id(7)
-	user22.set_team_id(7)
-	team8.new_team(admin_ids = [12,23], dev_ids = [12,23], name = "Will")
+	user21.set_team_id(7)
+	team8.new_team(admin_ids = [12,22], dev_ids = [12,22], name = "Will") #bidding
 	user12.set_team_id(8)
-	user23.set_team_id(8)
-	team9.new_team(admin_ids = [13], dev_ids = [13], name = "Get")
+	user22.set_team_id(8)
+	team9.new_team(admin_ids = [13], dev_ids = [13], name = "Get") #bidding
 	user13.set_team_id(9)
-	team10.new_team(admin_ids = [26,27], dev_ids = [26,27,28,29,30], name = "Hundred")
+	team10.new_team(admin_ids = [23,24], dev_ids = [23,24,25,26,27], name = "Hundred") #bidding
+	user23.set_team_id(10)
+	user24.set_team_id(10)
+	user25.set_team_id(10)
 	user26.set_team_id(10)
 	user27.set_team_id(10)
-	user28.set_team_id(10)
-	user29.set_team_id(10)
-	user30.set_team_id(10)
 	
 	#################################################################################################################
 	#################################################################################################################
@@ -487,11 +573,11 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	client4.new_user(name = "c4", username = "c4", password = 'c4', user_type = "client", balance = 40, interests = ["games", "money", "mobile", "AI", "robot"], status = "active", warning = 1)
 	client5.new_user(name = "c5", username = "c5", password = 'c5', user_type = "client", balance = 50, interests = ["radio", "web", "music", "internet"], status = "active")
 	
-	client6.new_user(name = "c6", username = "c6", password = "c6", user_type = "client", balance = 60, interests = ["data", "news", "music", "AI", "stocks"], status = "bidding")
-	client7.new_user(name = "c7", username = "c7", password = 'c7', user_type = "client", balance = 70, interests = ["games", "computer", "food", "statistics", "stocks"], status = "bidding")
-	client8.new_user(name = "c8", username = "c8", password = 'c8', user_type = "client", balance = 80, interests = ["data", "music", "books", "AI", "music"], status = "bidding")
-	client9.new_user(name = "c9", username = "c9", password = 'c9', user_type = "client", balance = 90, interests = ["games", "money", "mobile", "AI", "robot"], status = "bidding", warning = 1)
-	client10.new_user(name = "c10", username = "c10", password = 'c10', user_type = "client", balance = 100, interests = ["games", "money", "mobile", "AI", "robot"], status = "bidding")
+	client6.new_user(name = "c6", username = "c6", password = "c6", user_type = "client", balance = 60, interests = ["data", "news", "music", "AI", "stocks"], status = "active")
+	client7.new_user(name = "c7", username = "c7", password = 'c7', user_type = "client", balance = 70, interests = ["games", "computer", "food", "statistics", "stocks"], status = "active")
+	client8.new_user(name = "c8", username = "c8", password = 'c8', user_type = "client", balance = 80, interests = ["data", "music", "books", "AI", "music"], status = "active")
+	client9.new_user(name = "c9", username = "c9", password = 'c9', user_type = "client", balance = 90, interests = ["games", "money", "mobile", "AI", "robot"], status = "active", warning = 1)
+	client10.new_user(name = "c10", username = "c10", password = 'c10', user_type = "client", balance = 100, interests = ["games", "money", "mobile", "AI", "robot"], status = "active")
 	
 	client11.new_user(name = "c11", username = "c11", password = "c11", user_type = "client", balance = 110, interests = ["data", "news", "music", "AI", "stocks"], status = "active", warning = 2)
 	client12.new_user(name = "c12", username = "c12", password = 'c12', user_type = "client", balance = 120, interests = ["games", "computer", "mobile", "statistics", "stocks"], status = "temp")
@@ -499,201 +585,128 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	client14.new_user(name = "c14", username = "c14", password = 'c14', user_type = "client", balance = 140, interests = ["games", "money", "mobile", "AI", "robot"], status = "blacklisted", warning = 2)
 	client15.new_user(name = "c15", username = "c15", password = 'c15', user_type = "client", balance = 5, interests = ["games", "money", "mobile", "AI", "robot"], status = "rejected")
 
+	
+	##################################################################################################################
+	#set images
+	set_default_img()
+	###################################################################################################################
+	
+	
 	#################################################################################################################
 	#################################################################################################################
 	#CREATING PROJECT
 	#################################################################################################################
 	#################################################################################################################
 	
-	project0.new_project(client_id = client0.get_id(), bid_id = 0, title = "Turk System", desc = "Random group of four were able to make an awesome project", bid_end_date = now,  deadline = later, status= "active")
-	project1.new_project(client_id = client1.get_id(), bid_id = 1, title = "Hello", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
-	project2.new_project(client_id = client2.get_id(), bid_id = 2, title = "World", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "active")
-	project3.new_project(client_id = client3.get_id(), bid_id = 3, title = "Goodbye", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "active")
-	project4.new_project(client_id = client4.get_id(), bid_id = 4, title = "VR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "active")
-	project5.new_project(client_id = client5.get_id(), bid_id = 5, title = "Cow", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project0.new_project(client_id = client0.get_id(), bid_id = 0, title = "Turk System", desc = "Random group of four were able to make an awesome project", bid_end_date = now,  deadline = later, status= "complete")
+	project1.new_project(client_id = client1.get_id(), bid_id = 1, title = "Hello", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project2.new_project(client_id = client2.get_id(), bid_id = 2, title = "World", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project3.new_project(client_id = client3.get_id(), bid_id = 3, title = "Goodbye", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project4.new_project(client_id = client4.get_id(), bid_id = 4, title = "VR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project5.new_project(client_id = client5.get_id(), bid_id = 5, title = "Cow", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "incomplete")
 
-	project6.new_project(client_id = client6.get_id(), bid_id = 6, title = "mack", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "bidding")
-	project7.new_project(client_id = client7.get_id(), bid_id = 7, title = "EM", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "bidding")
+	project6.new_project(client_id = client6.get_id(), bid_id = 6, title = "mack", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
+	project7.new_project(client_id = client7.get_id(), bid_id = 7, title = "EM", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "active")
 	project8.new_project(client_id = client8.get_id(), bid_id = 8, title = "WE", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "bidding")
-	project9.new_project(client_id = client9.get_id(), bid_id = 9, title = "EWW", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "active")
-	project10.new_project(client_id = client10.get_id(), bid_id = 10, title = "Cow", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project9.new_project(client_id = client9.get_id(), bid_id = 9, title = "EWW", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "bidding")
+	project10.new_project(client_id = client10.get_id(), bid_id = 10, title = "Cow", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "bidding")
 	
-	project11.new_project(client_id = client11.get_id(), bid_id = 11, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
-	project12.new_project(client_id = client12.get_id(), bid_id = 12, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "active")
-	project13.new_project(client_id = client13.get_id(), bid_id = 13, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "active")
-	project14.new_project(client_id = client14.get_id(), bid_id = 14, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "active")
-	project15.new_project(client_id = client15.get_id(), bid_id = 15, title = "Cow", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project11.new_project(client_id = client11.get_id(), bid_id = 11, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project12.new_project(client_id = client12.get_id(), bid_id = 12, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project13.new_project(client_id = client13.get_id(), bid_id = 13, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project14.new_project(client_id = client14.get_id(), bid_id = 14, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project15.new_project(client_id = client15.get_id(), bid_id = 15, title = "Cow", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "complete")
 	
-	project16.new_project(client_id = client11.get_id(), bid_id = 16, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
-	project17.new_project(client_id = client11.get_id(), bid_id = 17, title = "MORE", desc = "I have a lot of money, too?",  bid_end_date = later, deadline = n_days(2), status= "active")
-	project18.new_project(client_id = client12.get_id(), bid_id = 18, title = "PROJECT", desc = "I have more money than the other guy",  bid_end_date = later, deadline = n_days(2), status= "active")
-	project19.new_project(client_id = client13.get_id(), bid_id = 19, title = "OR", desc = "Don't listen to any of them, I have the most",  bid_end_date = later, deadline = n_days(2), status= "active")
-	project20.new_project(client_id = client14.get_id(), bid_id = 20, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project16.new_project(client_id = client0.get_id(), bid_id = 16, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project17.new_project(client_id = client0.get_id(), bid_id = 17, title = "MORE", desc = "I have a lot of money, too?",  bid_end_date = later, deadline = n_days(2), status= "complete")
+	project18.new_project(client_id = client0.get_id(), bid_id = 18, title = "PROJECT", desc = "I have more money than the other guy",  bid_end_date = later, deadline = n_days(2), status= "complete")
+	project19.new_project(client_id = client0.get_id(), bid_id = 19, title = "OR", desc = "Don't listen to any of them, I have the most",  bid_end_date = later, deadline = n_days(2), status= "complete")
+	project20.new_project(client_id = client1.get_id(), bid_id = 20, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "complete")
 
-	project21.new_project(client_id = client6.get_id(), bid_id = 21, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
-	project22.new_project(client_id = client7.get_id(), bid_id = 22, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "active")
-	project23.new_project(client_id = client8.get_id(), bid_id = 23, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "active")
-	project24.new_project(client_id = client9.get_id(), bid_id = 24, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "active")
-	project25.new_project(client_id = client10.get_id(), bid_id = 25, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project21.new_project(client_id = client1.get_id(), bid_id = 21, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project22.new_project(client_id = client2.get_id(), bid_id = 22, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project23.new_project(client_id = client3.get_id(), bid_id = 23, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project24.new_project(client_id = client4.get_id(), bid_id = 24, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project25.new_project(client_id = client5.get_id(), bid_id = 25, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "complete")
 	
-	project26.new_project(client_id = client6.get_id(), bid_id = 26, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "bidding")
-	project27.new_project(client_id = client7.get_id(), bid_id = 27, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "bidding")
-	project28.new_project(client_id = client8.get_id(), bid_id = 28, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "bidding")
-	project29.new_project(client_id = client9.get_id(), bid_id = 29, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "bidding")
-	project30.new_project(client_id = client10.get_id(), bid_id = 30, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "bidding")
+	project26.new_project(client_id = client10.get_id(), bid_id = 26, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project27.new_project(client_id = client10.get_id(), bid_id = 27, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project28.new_project(client_id = client10.get_id(), bid_id = 28, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project29.new_project(client_id = client10.get_id(), bid_id = 29, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project30.new_project(client_id = client10.get_id(), bid_id = 30, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "complete")
 	
-	project31.new_project(client_id = client6.get_id(), bid_id = 31, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
-	project32.new_project(client_id = client7.get_id(), bid_id = 32, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "active")
-	project33.new_project(client_id = client8.get_id(), bid_id = 33, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "active")
-	project34.new_project(client_id = client9.get_id(), bid_id = 34, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "active")
-	project35.new_project(client_id = client10.get_id(), bid_id = 35, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project31.new_project(client_id = client10.get_id(), bid_id = 31, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "bidding")
+	project32.new_project(client_id = client10.get_id(), bid_id = 32, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "bidding")
+	project33.new_project(client_id = client3.get_id(), bid_id = 33, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project34.new_project(client_id = client4.get_id(), bid_id = 34, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project35.new_project(client_id = client5.get_id(), bid_id = 35, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "complete")
 	
-	project36.new_project(client_id = client6.get_id(), bid_id = 36, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
-	project37.new_project(client_id = client7.get_id(), bid_id = 37, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "active")
-	project38.new_project(client_id = client8.get_id(), bid_id = 38, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "active")
-	project39.new_project(client_id = client9.get_id(), bid_id = 39, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "active")
-	project40.new_project(client_id = client10.get_id(), bid_id = 40, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project36.new_project(client_id = client11.get_id(), bid_id = 36, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project37.new_project(client_id = client11.get_id(), bid_id = 37, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project38.new_project(client_id = client11.get_id(), bid_id = 38, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project39.new_project(client_id = client11.get_id(), bid_id = 39, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "complete")
+	project40.new_project(client_id = client11.get_id(), bid_id = 40, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "complete")
 	
-	project41.new_project(client_id = client6.get_id(), bid_id = 41, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
-	project42.new_project(client_id = client7.get_id(), bid_id = 42, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "active")
-	project43.new_project(client_id = client8.get_id(), bid_id = 43, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "active")
-	project44.new_project(client_id = client9.get_id(), bid_id = 44, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "active")
-	project45.new_project(client_id = client10.get_id(), bid_id = 45, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project41.new_project(client_id = client11.get_id(), bid_id = 41, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "incomplete")
+	project42.new_project(client_id = client2.get_id(), bid_id = 42, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "incomplete")
+	project43.new_project(client_id = client1.get_id(), bid_id = 43, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "incomplete")
+	project44.new_project(client_id = client1.get_id(), bid_id = 44, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "incomplete")
+	project45.new_project(client_id = client5.get_id(), bid_id = 45, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "incomplete")
 	
-	project46.new_project(client_id = client6.get_id(), bid_id = 46, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "active")
-	project47.new_project(client_id = client7.get_id(), bid_id = 47, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "active")
-	project48.new_project(client_id = client8.get_id(), bid_id = 48, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "active")
-	project49.new_project(client_id = client9.get_id(), bid_id = 49, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "active")
-	project50.new_project(client_id = client10.get_id(), bid_id = 50, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "active")
+	project46.new_project(client_id = client11.get_id(), bid_id = 46, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = n_days(2), status= "no bid")
+	project47.new_project(client_id = client12.get_id(), bid_id = 47, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = n_days(2), status= "no bid")
+	project48.new_project(client_id = client13.get_id(), bid_id = 48, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = n_days(2), status= "no bid")
+	project49.new_project(client_id = client14.get_id(), bid_id = 49, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = n_days(2), status= "no bid")
+	project50.new_project(client_id = client15.get_id(), bid_id = 50, title = "NOT", desc = "Moo", bid_end_date = later, deadline = n_days(2), status= "no bid")
 	
 	#################################################################################################################
 	#################################################################################################################
-	#ADDING USE TO PROJECT
+	#ADDING USER/TEAMS TO PROJECT
 	#################################################################################################################
 	#################################################################################################################
-	#team0
-	team0.add_project_ids(project0.get_id())
-	user1.add_project_ids(project0.get_id())
-	user2.add_project_ids(project0.get_id())
-	user3.add_project_ids(project0.get_id())
-	user4.add_project_ids(project0.get_id())
-	#team1
-	team1.add_project_ids(project1.get_id())
-	user5.add_project_ids(project1.get_id())
-	user15.add_project_ids(project1.get_id())
-	user20.add_project_ids(project1.get_id())
-	#team2
-	team2.add_project_ids(project2.get_id())
-	user6.add_project_ids(project2.get_id())
-	user16.add_project_ids(project2.get_id())
-	#team3
-	team3.add_project_ids(project3.get_id())
-	user7.add_project_ids(project3.get_id())
-	user17.add_project_ids(project3.get_id())
-	#team4
-	team4.add_project_ids(project4.get_id())
-	user8.add_project_ids(project4.get_id())
-	user18.add_project_ids(project4.get_id())
-	#team5
-	team5.add_project_ids(project5.get_id())
-	user9.add_project_ids(project5.get_id())
-	user19.add_project_ids(project5.get_id())
-	#team6
-	team6.add_project_ids(project6.get_id())
-	user10.add_project_ids(project6.get_id())
-	user21.add_project_ids(project6.get_id())
-	#team7
-	team7.add_project_ids(project7.get_id())
-	user11.add_project_ids(project7.get_id())
-	#team8
-	team8.add_project_ids(project8.get_id())
-	user12.add_project_ids(project8.get_id())
-	user23.add_project_ids(project8.get_id())
-	#team9
-	team9.add_project_ids(project9.get_id())
-	user13.add_project_ids(project9.get_id())
-	#team10
-	team5.add_project_ids(project10.get_id())
-	user26.add_project_ids(project10.get_id())
-	user27.add_project_ids(project10.get_id())
-	user28.add_project_ids(project10.get_id())
-	user29.add_project_ids(project10.get_id())
-	user30.add_project_ids(project10.get_id())
-	#other older projects
+	add_project_to_team(0,[0])
+	add_project_to_team(1,[1])
+	add_project_to_team(2,[2])
+	add_project_to_team(3,[3])
+	add_project_to_team(4,[4])
+	add_project_to_team(5,[5])
+	add_project_to_team(6,[6])
+	add_project_to_team(7,[7])
+	add_project_to_team(8,[8])
+	add_project_to_team(9,[9])
+	add_project_to_team(10,[10])
+	reload_teams()
+	reload_users()
 	#################################################################################################################
 	#################################################################################################################
 	#ADDING CLIENT PROJECT
 	#################################################################################################################
 	#################################################################################################################
-	client0.add_project_ids(0)
-	client1.add_project_ids(1)
-	client2.add_project_ids(2)
-	client3.add_project_ids(3)
-	client4.add_project_ids(4)
-	client5.add_project_ids(5)
-	client6.add_project_ids(6)
-	client7.add_project_ids(7)
-	client8.add_project_ids(8)
-	client9.add_project_ids(9)
-	client10.add_project_ids(10)
-	client11.add_project_ids(11)
-	client12.add_project_ids(12)
-	client13.add_project_ids(13)
-	client14.add_project_ids(14)
-	client15.add_project_ids(15)
-	client6.add_project_ids(16)
-	client7.add_project_ids(17)
-	client8.add_project_ids(18)
-	client9.add_project_ids(19)
-	client0.add_project_ids(20)
-	client1.add_project_ids(21)
-	client2.add_project_ids(22)
-	client3.add_project_ids(23)
-	client4.add_project_ids(24)
-	client5.add_project_ids(25)
-	client6.add_project_ids(26)
-	client7.add_project_ids(27)
-	client8.add_project_ids(28)
-	client9.add_project_ids(29)
-
-	
+	client0.set_project_ids([16,17,18,19,0])
+	client1.set_project_ids([20,21,43,44,1])
+	client2.set_project_ids([22,42,2])
+	client3.set_project_ids([23,33,3])
+	client4.set_project_ids([24,34,4])
+	client5.set_project_ids([25,35,45,5])
+	client6.set_project_ids([6])
+	client7.set_project_ids([7])
+	client8.set_project_ids([8])
+	client9.set_project_ids([9])
+	client10.set_project_ids([26,27,28,29,30,31,32,10]) #high rating
+	client11.set_project_ids([46,36,37,38,39,40,41,11]) #low rating
+	client12.set_project_ids([47,12])
+	client13.set_project_ids([48,13])
+	client14.set_project_ids([49,14])
+	client15.set_project_ids([50,15])
 	
 	#################################################################################################################
 	#################################################################################################################
 	#CREATING BID
 	#################################################################################################################
 	#################################################################################################################
-	bid0.new_bid(0, bid_log = [[now, client0.get_id(), 10, later]])
-	bid1.new_bid(1, bid_log = [[now, client1.get_id(), 10, later]])
-	bid2.new_bid(2, bid_log = [[now, client2.get_id(), 10, later]])
-	bid3.new_bid(3, bid_log = [[now, client3.get_id(), 10, later]])
-	bid4.new_bid(4, bid_log = [[now, client4.get_id(), 10, later]])
-	bid5.new_bid(5, bid_log = [[now, client5.get_id(), 10, later]])
-	bid6.new_bid(6, bid_log = [[now, client6.get_id(), 10, later]])
-	bid7.new_bid(7, bid_log = [[now, client7.get_id(), 10, later]])
-	bid8.new_bid(8, bid_log = [[now, client8.get_id(), 10, later]])
-	bid9.new_bid(9, bid_log = [[now, client9.get_id(), 10, later]])
-	bid10.new_bid(10, bid_log = [[now, client10.get_id(), 100, later]])
-	bid11.new_bid(11, bid_log = [[now, client11.get_id(), 100, later]])
-	bid12.new_bid(12, bid_log = [[now, client12.get_id(), 100, later]])
-	bid13.new_bid(13, bid_log = [[now, client13.get_id(), 100, later]])
-	bid14.new_bid(14, bid_log = [[now, client14.get_id(), 100, later]])
-	bid15.new_bid(15, bid_log = [[now, client15.get_id(), 100, later]])
-	# bid16.new_bid(16, bid_log = [[now, client16.get_id(), 100, later]])
-	# bid17.new_bid(17, bid_log = [[now, client17.get_id(), 100, later]])
-	# bid18.new_bid(18, bid_log = [[now, client18.get_id(), 100, later]])
-	# bid19.new_bid(19, bid_log = [[now, client19.get_id(), 100, later]])
-	# bid20.new_bid(20, bid_log = [[now, client20.get_id(), 100, later]])
-	# bid21.new_bid(21, bid_log = [[now, client21.get_id(), 100, later]])
-	# bid22.new_bid(22, bid_log = [[now, client22.get_id(), 100, later]])
-	# bid23.new_bid(23, bid_log = [[now, client23.get_id(), 100, later]])
-	# bid24.new_bid(24, bid_log = [[now, client24.get_id(), 100, later]])
-	# bid25.new_bid(25, bid_log = [[now, client25.get_id(), 100, later]])
-	# bid26.new_bid(26, bid_log = [[now, client26.get_id(), 100, later]])
-	# bid27.new_bid(27, bid_log = [[now, client27.get_id(), 100, later]])
-	# bid28.new_bid(28, bid_log = [[now, client28.get_id(), 100, later]])
-	# bid29.new_bid(29, bid_log = [[now, client29.get_id(), 100, later]])
-	
+	#generic method: load from user and project into bid
+	generate_bids()
+	reload_bids()
 	
 	#################################################################################################################
 	#################################################################################################################
@@ -704,3 +717,48 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	issue1.new_issue(referred_id = 2, issue_desc ="new user", admin_review = "user denied", date_resolved = now)
 	issue2.new_issue(referred_id = 2, issue_desc ="new user")
 	issue3.new_issue(referred_id = 5, issue_desc ="quit request")
+
+def add_project_to_team(team_id, project_ids):
+	#generic method: set team and their user's project ids
+	jsonIO.set_value("team_db", team_id, "project_ids", project_ids)
+	dev_ids = jsonIO.get_value("team_db", team_id, "dev_ids")
+	for id in dev_ids:
+		jsonIO.set_value("user_db", id, "project_ids", project_ids)
+
+def generate_bids():
+	#generic method: load from user and project into bid
+	#not SU
+	for i in range(total_users, 1, -1):
+		user = jsonIO.get_row("user_db", i)
+		project_ids = user["project_ids"]
+		client_review = ""
+		if project_ids:
+			if user["user_type"] == "client":
+				for id in project_ids:
+					bid_log = [[]]
+					chosen_index = 'Nan'
+					project = jsonIO.get_row("project_db", id)
+					bid_log = [[ez.get_now(), user["id"], 100, project["deadline"]]]
+					jsonIO.add_row("bid_db", {"id":id, "chosen_index": chosen_index, "bid_log":bid_log, "client_review":client_review})
+			elif user["user_type"] == "dev" and (project["status"] == "complete" or project["status"] == "incomplete"):
+				proceed = 1
+				if user["team_id"] != 'Nan':
+					if user["id"] not in jsonIO.get_value("team_db", user["team_id"] , "admin_ids"):
+						proceed = 0
+				if proceed:
+					for id in project_ids:
+						chosen_id = 1
+						bid = jsonIO.get_row("bid_db", id)
+						bid["bid_log"].append ([ez.get_now(), user["id"], bid["bid_log"][-1][2]- randint(1,5), n_days(randint(-5, 0), project["deadline"])])
+						jsonIO.set_row("bid_db", bid)
+def set_default_img():
+	users = jsonIO.read_rows("user_db")
+	teams = jsonIO.read_rows("team_db")
+	for user in users:
+		if not user["pic"]:
+			user["pic"] = "default_user.png"
+			jsonIO.set_row("user_db", user)
+	for team in teams:
+		if not team["pic"]:
+			team["pic"] = "default_team.png"
+			jsonIO.set_row("team_db", team)
