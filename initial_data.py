@@ -8,9 +8,82 @@ import ezcommands as ez
 from datetime import *
 from random import randint
 import random
+
+###############################################################################
 #available functions
+#THESE ARE JUST COMMENTS - DO NOT UNCOMMENT
 #run(reset = 0):    creates classes and can reset our data
 #reload(): reloads the classes from db
+
+# super_user.new_user(name = "System Admin", username = "admin", password = "pass", user_type = "SU",  balance = 100)
+# u1-u49 are devs
+# user1.new_user(name = "Sebastian", username = "u1", password = "u1", user_type = "dev", balance = 100, resume = resume, interests = ["data", "statistics", "AI", "computer"], status = "active")
+# user2.new_user(name = "Ronny", username = "u2", password = 'u2', user_type = "dev", balance = 100,  interests = get_rand_interest(), status = "active")
+# user3.new_user(name = "David", username = "u3", password = 'u3', user_type = "dev", balance = 100, interests = get_rand_interest(), status = "active")
+# user4.new_user(name = "Eun Jung", username = "u4", password = 'u4', user_type = "dev", balance = 100, interests = get_rand_interest(), status = "active")
+
+# 50. c0 - 70. c20 are clients
+
+# teams = 1-10
+# 28,29,30 could be by themselves
+# team0.new_team(admin_ids = [1], dev_ids = [1,2,3,4], name = "REDS") #project_status = complete
+# team1.new_team(admin_ids = [5], dev_ids = [5,15,20], name = "WallStreet, where many things can go wrong") #bidding
+# team2.new_team(admin_ids = [6], dev_ids = [6,16], name = "One Cow Team") #active
+# team3.new_team(admin_ids = [7], dev_ids = [7,17], name = "Big") #active - turns to incomplete
+# team4.new_team(admin_ids = [8], dev_ids = [8,18], name = "Sad life") #active
+# team5.new_team(admin_ids = [9], dev_ids = [9,19], name = "Rainbow Darkness") #active
+# team6.new_team(admin_ids = [10,14], dev_ids = [10,14], name = "This") #active
+# team7.new_team(admin_ids = [11], dev_ids = [11,21], name = "Group") #bidding 
+# team8.new_team(admin_ids = [12,22], dev_ids = [12,22], name = "Will") #bidding
+# team9.new_team(admin_ids = [13], dev_ids = [13], name = "Get") #bidding
+# team10.new_team(admin_ids = [23,24], dev_ids = [23,24,25,26,27], name = "Hundred") #bidding
+
+# PROJECTS - bidding 7-18
+# add_project_to_team(0,[19,20,21,22,0]) #not active
+# add_project_to_team(1,[1,23,24,25,26,27,28,11]) #bidding
+# add_project_to_team(2,[2,29,30,31,32,33,34,12])#active
+# add_project_to_team(3,[3,35,36,37,38,39,40,13])#active
+# add_project_to_team(4,[4,41,42,43,14])#active
+# add_project_to_team(5,[5,44,45,46,15])#active
+# add_project_to_team(6,[6,47,48,49,16])#active
+# add_project_to_team(7,[50,51,52,7])#bidding
+# add_project_to_team(8,[8])#bidding
+# add_project_to_team(9,[9])#bidding
+# add_project_to_team(10,[10])#bidding
+# lone developer
+# user30.set_project_ids([53,54,55,56,57,58,59,60])#complete
+
+# CLIENTS
+# client0.set_project_ids([20,21,22,23,24,25,26,0])#complete
+# client1.set_project_ids([27,28,29,30,31,32,33,1])#complete
+# client2.set_project_ids([34,35,36,37,2])#complete
+# client3.set_project_ids([38,39,40,41,3])#complete
+# client4.set_project_ids([42,43,44,45,4])#complete
+# client5.set_project_ids([46,47,48,49,5])#complete
+# client6.set_project_ids([50,51,52,53,6])#complete
+# client7.set_project_ids([54,55,7])#bidding
+# client8.set_project_ids([8])#bidding
+# client9.set_project_ids([9])#bidding
+# client10.set_project_ids([10]) #high rating
+# client11.set_project_ids([11]) #low rating
+# client12.set_project_ids([12])#active
+# client13.set_project_ids([13])#active
+# client14.set_project_ids([14])#active
+# client15.set_project_ids([15])#active 
+# client16.set_project_ids([16])#active
+# client17.set_project_ids([17])#active 
+# client18.set_project_ids([18])#bidding - turns to no bid
+# client19.set_project_ids([19])#inactive
+# client20.set_project_ids([56,57,58,59,60])#blacklisted 
+
+####################################################################
+#SCENERIOS
+#project 7:  client 57: team 7: admin 11 becomes active 
+#project 18: client 18          becomes no bid
+#project 8:  client 8 : team 8: project has bids but you can bid on it and wait till active in 10 min
+#project 16: client 16: team 6: admin 6 becomes incomplete
+#project 15: client 15: team 5: admin 5 becomes submitted + client's project retrieval => complete
+###############################################################################
 
 total_users = 70
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -29,6 +102,19 @@ def n_days(n = 1, time = None):
 		dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S") + timedelta(days = n)
 	next_days = dt_now.strftime("%Y-%m-%d %H:%M:%S")
 	return next_days
+
+def n_minutes(n = 1, time = None):
+	if time:
+		now = time
+	else:
+		now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	if n < 1:
+		dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S") - timedelta(minutes = -n)
+	else:
+		dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S") + timedelta(minutes = n)
+	next_days = dt_now.strftime("%Y-%m-%d %H:%M:%S")
+	return next_days	
+	
 	
 def rand_days():
 	return n_days(randint(2,7))
@@ -121,20 +207,20 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	user3.set_team_id(0)
 	user4.set_team_id(0)
 	#28,29,30 could be by themselves
-	team1.new_team(admin_ids = [5], dev_ids = [5,15,20], name = "WallStreet, where many things can go wrong") #complete
+	team1.new_team(admin_ids = [5], dev_ids = [5,15,20], name = "WallStreet, where many things can go wrong") #bidding
 	user5.set_team_id(1)
 	user15.set_team_id(1)
 	user20.set_team_id(1)
-	team2.new_team(admin_ids = [6], dev_ids = [6,16], name = "One Cow Team") #complete
+	team2.new_team(admin_ids = [6], dev_ids = [6,16], name = "One Cow Team") #active
 	user6.set_team_id(2)
 	user16.set_team_id(2)
-	team3.new_team(admin_ids = [7], dev_ids = [7,17], name = "Big") #complete
+	team3.new_team(admin_ids = [7], dev_ids = [7,17], name = "Big") #active - turns to incomplete
 	user7.set_team_id(3)
 	user17.set_team_id(3)
-	team4.new_team(admin_ids = [8], dev_ids = [8,18], name = "Sad life") #complete
+	team4.new_team(admin_ids = [8], dev_ids = [8,18], name = "Sad life") #active
 	user4.set_team_id(4)
 	user4.set_team_id(4)
-	team5.new_team(admin_ids = [9], dev_ids = [9,19], name = "Rainbow Darkness") #incomplete
+	team5.new_team(admin_ids = [9], dev_ids = [9,19], name = "Rainbow Darkness") #active
 	user9.set_team_id(5)
 	user19.set_team_id(5)
 	
@@ -162,26 +248,26 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	#################################################################################################################
 	#################################################################################################################
 	#id 50 = client 0
-	project0.new_project(50, bid_id = 0, title = "Turk System", desc = "Random group of four were able to make an awesome project", bid_end_date = now,  deadline = later, status= "complete")
+	project0.new_project(50, bid_id = 0, title = "Turk System", desc = "Random group of four were able to make an awesome project", bid_end_date = now,  deadline = later, client_rating = 5, team_rating = 5, status= "complete")
 	project1.new_project(51, bid_id = 1, title = "Hello", desc = "I have a lot of money", bid_end_date = later, deadline = rand_days(), status= "complete")
 	project2.new_project(52, bid_id = 2, title = "World", desc = "I have a lot of money, too?", bid_end_date = later, deadline = rand_days(), status= "complete")
 	project3.new_project(53, bid_id = 3, title = "Goodbye", desc = "I have more money than the other guy", bid_end_date = later, deadline = rand_days(), status= "complete")
 	project4.new_project(54, bid_id = 4, title = "VR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = rand_days(), status= "complete")
 	project5.new_project(55, bid_id = 5, title = "Cow", desc = "Moo", bid_end_date = later, deadline = rand_days(), status= "complete")
 	project6.new_project(56, bid_id = 6, title = "mack", desc = "I have a lot of money", bid_end_date = later, deadline = rand_days(), status= "complete")
-	project7.new_project(57, bid_id = 7, title = "EM", desc = "I have a lot of money, too?", bid_end_date = later, deadline = rand_days(), status= "bidding")
-	project8.new_project(58, bid_id = 8, title = "WE", desc = "I have more money than the other guy", bid_end_date = later, deadline = rand_days(), status= "bidding")
+	project7.new_project(57, bid_id = 7, title = "EM", desc = "I have a lot of money, too?", bid_end_date = now, deadline = rand_days(), status= "bidding")
+	project8.new_project(58, bid_id = 8, title = "WE", desc = "I have more money than the other guy", bid_end_date = n_minutes(10), deadline = rand_days(), status= "bidding")
 	project9.new_project(59, bid_id = 9, title = "EWW", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = rand_days(), status= "bidding")
 	project10.new_project(60, bid_id = 10, title = "Cow", desc = "Moo", bid_end_date = later, deadline = rand_days(), status= "bidding")
 	
 	project11.new_project(61, bid_id = 11, title = "NO", desc = "I have a lot of money", bid_end_date = later, deadline = rand_days(), status= "bidding")
-	project12.new_project(62, bid_id = 12, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = rand_days(), status= "bidding")
-	project13.new_project(63, bid_id = 13, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = rand_days(), status= "bidding")
-	project14.new_project(64, bid_id = 14, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = rand_days(), status= "bidding")
-	project15.new_project(65, bid_id = 15, title = "CORN", desc = "Moo", bid_end_date = later, deadline = rand_days(), status= "bidding")
-	project16.new_project(66, bid_id = 16, title = "Companion Without Courage", desc = "I have a lot of money", bid_end_date = later, deadline = rand_days(), status= "bidding")
+	project12.new_project(62, bid_id = 12, title = "MORE", desc = "I have a lot of money, too?", bid_end_date = later, deadline = rand_days(), status= "active")
+	project13.new_project(63, bid_id = 13, title = "PROJECT", desc = "I have more money than the other guy", bid_end_date = later, deadline = rand_days(), status= "active")
+	project14.new_project(64, bid_id = 14, title = "OR", desc = "Don't listen to any of them, I have the most", bid_end_date = later, deadline = rand_days(), status= "active")
+	project15.new_project(65, bid_id = 15, title = "CORN", desc = "Moo", bid_end_date = now, deadline = now, submission = "sample.txt", status= "active")
+	project16.new_project(66, bid_id = 16, title = "Companion Without Courage", desc = "I have a lot of money", bid_end_date = now, deadline = now, status= "active")
 	project17.new_project(67, bid_id = 17, title = "Spider Without Honor", desc = "I have a lot of money, too?",  bid_end_date = later, deadline = rand_days(), status= "bidding")
-	project18.new_project(68, bid_id = 18, title = "Fish Of The Light", desc = "I have more money than the other guy",  bid_end_date = later, deadline = rand_days(), status= "bidding")
+	project18.new_project(68, bid_id = 18, title = "Fish Of The Light", desc = "I have more money than the other guy",  bid_end_date = now, deadline = rand_days(), status= "bidding")
 	project19.new_project(69, bid_id = 19, title = "Doctors Of Eternity", desc = "Don't listen to any of them, I have the most",  bid_end_date = later, deadline = rand_days(), status= "complete")
 	project20.new_project(50, bid_id = 20, title = "Lord of the Spiders", desc = "Moo", bid_end_date = later, deadline = rand_days(), status= "complete")
 
@@ -234,25 +320,25 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	#ADDING CLIENT PROJECT
 	#################################################################################################################
 	#################################################################################################################
-	client0.set_project_ids([20,21,22,23,24,25,26,0])
-	client1.set_project_ids([27,28,29,30,31,32,33,1])
-	client2.set_project_ids([34,35,36,37,2])#active
-	client3.set_project_ids([38,39,40,41,3])#active
-	client4.set_project_ids([42,43,44,45,4])#active
-	client5.set_project_ids([46,47,48,49,5])#active
-	client6.set_project_ids([50,51,52,53,6])#active
+	client0.set_project_ids([20,21,22,23,24,25,26,0])#complete
+	client1.set_project_ids([27,28,29,30,31,32,33,1])#complete
+	client2.set_project_ids([34,35,36,37,2])#complete
+	client3.set_project_ids([38,39,40,41,3])#complete
+	client4.set_project_ids([42,43,44,45,4])#complete
+	client5.set_project_ids([46,47,48,49,5])#complete
+	client6.set_project_ids([50,51,52,53,6])#complete
 	client7.set_project_ids([54,55,7])#bidding
 	client8.set_project_ids([8])#bidding
 	client9.set_project_ids([9])#bidding
 	client10.set_project_ids([10]) #high rating
 	client11.set_project_ids([11]) #low rating
-	client12.set_project_ids([12])#bidding
-	client13.set_project_ids([13])#bidding
-	client14.set_project_ids([14])#bidding
-	client15.set_project_ids([15])#bidding 
-	client16.set_project_ids([16])#bidding
-	client17.set_project_ids([17])#bidding - no bid
-	client18.set_project_ids([18])#bidding - no bid
+	client12.set_project_ids([12])#active
+	client13.set_project_ids([13])#active
+	client14.set_project_ids([14])#active
+	client15.set_project_ids([15])#active 
+	client16.set_project_ids([16])#active
+	client17.set_project_ids([17])#active 
+	client18.set_project_ids([18])#bidding - turns to no bid
 	client19.set_project_ids([19])#inactive
 	client20.set_project_ids([56,57,58,59,60])#blacklisted 
 	
@@ -299,8 +385,15 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 def generate_new_user(initial, end, user_type):
 	for count in range(initial, end+1):
 		balance = randint(100,500)
-		name = "u"+str(count)
-		jsonIO.add_row("user_db",{"id":count, "name":name, "username":name, "password":name,
+		cred = ""
+		name = ""
+		if user_type == "user":
+			cred = "u" + str(count)
+			name = cred
+		elif user_type == "client":
+			cred = "c" + str(count-50)
+			name = str(count) + "." + cred
+		jsonIO.add_row("user_db",{"id":count, "name":name, "username":cred, "password":cred,
 			"user_type": user_type, "balance":balance, "status":"active", "warning":0,
 			"resume":"", "pic":"default_user.png", "interests":get_rand_interest(), "issue_ids":[],
 			"team_id":'Nan', "project_ids":[]})
@@ -324,7 +417,7 @@ def generate_bids():
 				for id in project_ids:
 					project = jsonIO.get_row("project_db", id)
 					bid_log = [[ez.get_now(), user["id"], 100, project["deadline"]]]
-					jsonIO.add_row("bid_db", {"id":id, "chosen_index": 'Nan', "bid_log":[[]], "client_review":client_review})
+					jsonIO.add_row("bid_db", {"id":id, "chosen_index": 'Nan', "bid_log":bid_log, "client_review":client_review})
 			elif user["user_type"] == "dev" and (project["status"] != "no bid"):
 				proceed = 1
 				if user["team_id"] != 'Nan':
@@ -332,8 +425,8 @@ def generate_bids():
 						proceed = 0
 				if proceed:
 					for id in project_ids:
-						chosen_id = 1
 						bid = jsonIO.get_row("bid_db", id)
+						bid["chosen_index"] = len(bid["bid_log"])
 						bid["bid_log"].append ([ez.get_now(), user["id"], bid["bid_log"][-1][2]- randint(1,5), n_days(randint(-5, 0), project["deadline"])])
 						jsonIO.set_row("bid_db", bid)
 						

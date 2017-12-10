@@ -455,7 +455,7 @@ def fsm_project(project_id):
 		return 0
 	if project["status"] == "bidding":
 		#check if bid is over
-		if bid_timeout(project_id):
+		if bid_timeout(project_id) or jsonIO.get("bid_db", project_id, "chosen_index") != 'Nan':
 			if len(get_bid_log(project_id)) <= 1:
 				jsonIO.set_value("project_db", project_id, "status", "no bid")
 			else:
@@ -465,16 +465,17 @@ def fsm_project(project_id):
 			return 0
 	elif project["status"] == "active":
 		#check if the project is over
-		if string_to_datetime(project["deadline"]) <= get_now(True):
-			if project["submission"]:
-				jsonIO.set_value("project_db", project_id, "status", "submitted")
-			else:
-				jsonIO.set_value("project_db", project_id, "status", "incomplete")
+		if project["submission"]:
+			jsonIO.set_value("project_db", project_id, "status", "submitted")
+			finalize_funds(project_id)
+		elif string_to_datetime(project["deadline"]) <= get_now(True):
+			jsonIO.set_value("project_db", project_id, "status", "incomplete")
 			finalize_funds(project_id)
 		else:
 			return 0
 	# this should be covered by when customer gets project
-	#elif project["state"] == "submitted":
+	elif project["state"] == "submitted":
+		print("The client must pick up his project")
 	return 1    
 	
 	
@@ -840,17 +841,20 @@ def choose_bid(bid_id, dev_id, reason = ""):
 	if not bid:
 		print("Bid does not exist")
 		return ""
-	#if the bidder chosen was the lowest and default reason
-	if dev_id == bid["bid_log"][-1][1] and False:
+	#if the bidder chosen was the lowest, it returns the default reason
+	if dev_id == bid["bid_log"][-1][1]:
 		bid["chosen_index"] = -1
-		print(bid)
+		reason = "lowest bidder"
 	#check if reason was given
 	else:
-		if reason == "lowest bidder":
+		if not reason:
 			return "please give a valid reason"
 		else:
 			#find and set the index of the chosen dev 
 			bid["chosen_index"] = get_bidder_index("bid_db", bid["bid_log"], dev_id)
+			if bid["chosen_index"] == 'Nan':
+				print("not a valid dev_id")
+				return ""
 			dev = get_row(User(), dev_id)
 			if is_admin(dev):
 				team = jsonIO.get_row("team_db", dev['team_id'])
@@ -883,10 +887,10 @@ def get_bid_log(bid_id, only_id = False):
 #post:    returns the bid_log of the chosen bid
 #        if only_id = True we only return the winner's id
 def get_chosen_bid(project_id, only_id = False):
-	chosen_index = jsonIO.get_value("project_db", project_id, "chosen_index")
+	chosen_index = jsonIO.get_value("bid_db", project_id, "chosen_index")
 	if chosen_index == None:
 		return []
-	bid_log = jsonIO.get_value("bid_db", bid_id, "bid_log")
+	bid_log = jsonIO.get_value("bid_db", project_id, "bid_log")
 	if not bid_log or bid_log == [[]]:
 		return []
 	if only_id:
@@ -894,7 +898,7 @@ def get_chosen_bid(project_id, only_id = False):
 	else:
 		return bid_log[chosen_index]
 
-#pre:    project status must be in bidding
+#pre:    project status must be in no bid or active (by fsm_project)
 #post:    if not chosen_index but has bids in bid log it will update it
 #        set project to "active" if bid on else "no bid"
 #        set user status to "active" who were in bid
@@ -906,11 +910,11 @@ def end_bid(bid_id):
 	if not project:
 		print ("Project does not exist")
 		return 'Nan'
-	if project["status"] != "bidding":
-		print("Project is not in bidding phase")
+	if project["status"] != "active" and project["status"] != "no bid":
+		print("Project is neither active or in no bid phase")
 		return 'Nan'
 	#check if project was bid on
-	if len(bid["bid_log"]) <= 1:
+	if project["status"] == "no bid":
 		#PENALTY ON CLIENT
 		to_user_id = 0
 		amount = 10
@@ -1019,33 +1023,35 @@ def submit(src, new_project, project_id):
 #pre:    project must exist and path must be valid
 #post:    either error message or returns project
 def get_submission(dst, project_id):
-	project = jsonIO.get_value("project_db", project_id, "submission")
-	if not project:
-		return "Project could not be found"
-	if not project["submission"]:
+	project = jsonIO.get_row("project_db", project_id)
+	file_name = project["submission"]
+	if not file_name:
 		return "Project has not been submitted yet"
 	#check file path exist to image
 	if not os.path.exists(dst):
 		return "The file path: " + dst + " does not exist."
 	#if file exist in folder rename to (1)
-	path = os.path.join(prj_folder, project)
+	path = os.path.join(prj_folder, file_name)
 	if not os.path.exists(path):
 		return "We couldn't find project in our database, contact admin"
-	new_name = project
+	new_name = file_name
 	if os.path.exists(os.path.join(dst, new_name)):
 		n = 1
 		new_name += "(" + str(n) + ")"
 		#if still exist, keep incrementing number
 		while os.path.exists(os.path.join(dst, new_name)):
 			n += 1
-			new_name = new_file + "(" + str(n) + ")"
+			new_name = file_name + "(" + str(n) + ")"
 		#copies the renamed file to file folder
 		shutil.copy(path, os.path.join(dst, new_name))
 	else:
 		#copies the file to file folder
 		shutil.copy(path, dst)
 	#set project status to complete when retrieved
-	jsonIO.set_value("project_db", project_id, "status", "complete")
+	if project["status"] == "submitted":
+		jsonIO.set_value("project_db", project_id, "status", "complete")
+		finalize_funds(project_id)
+		print("Client has taken their project setting project to complete")
 	#remove the project from the database
 	#jsonIO.set_value("project_db", project_id, "submission", "")
 	# if os.path.exists(path):
@@ -1095,7 +1101,10 @@ def finalize_funds(project_id):
 	if not project:
 		print("Project does not exist")
 		return 0
-	if project["status"] != "incomplete" or project["status"] != "complete":
+	if project ["status"] == "submitted":
+		print ("Client has not yet retrieved the submission. Please wait")
+		return 0
+	if project["status"] != "incomplete" and project["status"] != "complete":
 		print("Project was not set to complete or incomplete")
 		return 0
 	bid_log = get_chosen_bid(project_id)
@@ -1109,12 +1118,14 @@ def finalize_funds(project_id):
 	#send back the money to client if incomplete
 	if project["status"] == "incomplete":
 		print("Project was incomplete so penalizing")
-		transfer_funds(bid_log[1], project["client"], amount)
-		transfer_funds(0, project["client"], deduction)
+		transfer_funds(bid_log[1], project["client_id"], amount)
+		transfer_funds(0, project["client_id"], deduction)
+		jsonIO.set_value("project_db", project_id, "client_rating", 1)
+		jsonIO.set_value("project_db", project_id, "client_review", "Project incomplete")
 		return 1
 	#if rating was lower than 3 talk to client to decide
 	if project["client_rating"] < 3:
-		print("Rating was less than 3 needs to talk to client")
+		print("Rating was less than 3, the client must talk to SU")
 		return -1
 	#else if complete send dev the money
 	transfer_funds(0, bid_log[1], deduction)
