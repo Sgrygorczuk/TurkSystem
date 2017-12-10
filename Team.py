@@ -3,14 +3,14 @@ import jsonIO
 class Team:
 	db = "team_db"
 	
-	def __init__(self, admin_ids = [], dev_ids = [], name = "", pic = "", desc = "",
+	def __init__(self, admin_ids = [], dev_ids = [], name = "", pic = "default_team.png", desc = "",
 		project_ids = [], active_project= "", join_request_ids = [], status = "active"):
 		self.id = 'Nan'
 		#might call new_team later on
 		self.new_team(admin_ids, dev_ids, name, pic, desc, project_ids, active_project, join_request_ids, status)
 
 	#create a new team in db and in class
-	def new_team(self, admin_ids, dev_ids, name, pic = "", desc = "", project_ids = [], active_project = 'Nan', join_request_ids = [], status = "active"):
+	def new_team(self, admin_ids, dev_ids, name, pic = "default_team.png", desc = "", project_ids = [], active_project = 'Nan', join_request_ids = [], status = "active"):
 		self.set_all(admin_ids, dev_ids, name, pic, desc, project_ids, active_project, join_request_ids, status)
 		#make new class if not called explicitly
 		if name:

@@ -5,14 +5,14 @@ class User:
 	db = "user_db"
 
 	def __init__(self, name= "", username = "", password = "", user_type = "", balance = 0,
-		status = "", warning = 0, resume = "", pic = "", interests = [], issue_ids = [], team_id = 'Nan', project_ids = []):
+		status = "", warning = 0, resume = "", pic = "default_user.png", interests = [], issue_ids = [], team_id = 'Nan', project_ids = []):
 		self.id = 'Nan'
 		#might call new_user later on
 		self.new_user(name, username, password, user_type, balance, status, warning, resume, pic, interests, issue_ids, team_id, project_ids)
 	
 	#create a new user in db and in class
 	def new_user(self, name, username, password, user_type, balance,
-		status = "temp", warning = 0, resume = "", pic = "", interests = [], issue_ids = [], team_id = 'Nan', project_ids = []):
+		status = "temp", warning = 0, resume = "", pic = "default_user.png", interests = [], issue_ids = [], team_id = 'Nan', project_ids = []):
 		self.set_all(name, username, password, user_type, balance, status, warning, resume, pic, interests, issue_ids, team_id, project_ids)
 		#make new class if not called explicitly
 		if username:
@@ -26,7 +26,7 @@ class User:
 			
 	#create a new user in class only
 	def set_all(self, name, username, password, user_type, balance,
-		status, warning = 0, resume="", pic="", interests = [], issue_ids = [], team_id = 'Nan', project_ids = [], modify_db = 0):
+		status, warning = 0, resume="", pic="default_user.png", interests = [], issue_ids = [], team_id = 'Nan', project_ids = [], modify_db = 0):
 		#userCred_db
 		self.name = name
 		self.username = username

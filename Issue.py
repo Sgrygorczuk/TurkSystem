@@ -24,7 +24,7 @@ class Issue:
 	#create a new issue in class only
 	def set_all(self, referred_id, issue_desc, admin_review, date_resolved, resolved, modify_db = 0):
 		self.referred_id = referred_id		# if it a new_project, ref_id = project_id
-		self.issue_desc = issue_desc 		# new user, blacklisted, rating, rejected, balance, quit team, quit user
+		self.issue_desc = issue_desc 		# new user, blacklisted, warning, rejected, payment, quit team, quit user
 		self.admin_review = admin_review	# admin's decision and explanation
 		self.date_resolved = date_resolved	# date the admin resolved this (used for blacklisted user, 1 year after)
 		self.resolved = resolved 			# true/false
