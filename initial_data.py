@@ -251,8 +251,8 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	client14.set_project_ids([14])#bidding
 	client15.set_project_ids([15])#bidding 
 	client16.set_project_ids([16])#bidding
-	client17.set_project_ids([17])#bidding
-	client18.set_project_ids([18])#bidding
+	client17.set_project_ids([17])#bidding - no bid
+	client18.set_project_ids([18])#bidding - no bid
 	client19.set_project_ids([19])#inactive
 	client20.set_project_ids([56,57,58,59,60])#blacklisted 
 	
@@ -261,17 +261,19 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	#ADDING USER/TEAMS TO PROJECT
 	#################################################################################################################
 	#################################################################################################################
-	add_project_to_team(0,[0])
-	add_project_to_team(1,[1])
-	add_project_to_team(2,[2])
-	add_project_to_team(3,[3])
-	add_project_to_team(4,[4])
-	add_project_to_team(5,[5])
-	add_project_to_team(6,[6])
-	add_project_to_team(7,[7])
+	add_project_to_team(0,[19,20,21,22,0])
+	add_project_to_team(1,[1,23,24,25,26,27,28,11])
+	add_project_to_team(2,[2,29,30,31,32,33,34,12])
+	add_project_to_team(3,[3,35,36,37,38,39,40,13])
+	add_project_to_team(4,[4,41,42,43,14])
+	add_project_to_team(5,[5,44,45,46,15])
+	add_project_to_team(6,[6,47,48,49,16])
+	add_project_to_team(7,[50,51,52,7])
 	add_project_to_team(8,[8])
 	add_project_to_team(9,[9])
 	add_project_to_team(10,[10])
+	#lone developer
+	user30.set_project_ids([53,54,55,56,57,58,59,60])
 	
 	#################################################################################################################
 	#################################################################################################################
@@ -320,12 +322,10 @@ def generate_bids():
 		if project_ids:
 			if user["user_type"] == "client":
 				for id in project_ids:
-					bid_log = [[]]
-					chosen_index = 'Nan'
 					project = jsonIO.get_row("project_db", id)
 					bid_log = [[ez.get_now(), user["id"], 100, project["deadline"]]]
-					jsonIO.add_row("bid_db", {"id":id, "chosen_index": chosen_index, "bid_log":bid_log, "client_review":client_review})
-			elif user["user_type"] == "dev" and (project["status"] == "complete" or project["status"] == "incomplete" or project["status"] == "bidding"):
+					jsonIO.add_row("bid_db", {"id":id, "chosen_index": 'Nan', "bid_log":[[]], "client_review":client_review})
+			elif user["user_type"] == "dev" and (project["status"] != "no bid"):
 				proceed = 1
 				if user["team_id"] != 'Nan':
 					if user["id"] not in jsonIO.get_value("team_db", user["team_id"] , "admin_ids"):

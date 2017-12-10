@@ -642,9 +642,9 @@ def set_pic(src, new_img, user_id, user_type):
 #post:    either error message or returns path of image
 def get_pic(user_id, user_type):    
 	if user_type == "team":
-		pic = jsonIO.get_value("team_db", user_id, "pic")
+		pic = img_folder+"/"+jsonIO.get_value("team_db", user_id, "pic")
 	else:
-		pic = jsonIO.get_value("user_db", user_id, "pic")
+		pic = img_folder+"/"+jsonIO.get_value("user_db", user_id, "pic")
 	return os.path.join(img_folder, pic)
 
 	
@@ -1408,7 +1408,7 @@ def is_in_active_project(user):
    if len(user["project_ids"]) > 0:
 	   id = user["project_ids"][len(user["project_ids"]) - 1]
 	   project = jsonIO.get_row("project_db", id)
-	   if project["status"] == "active" or project["status"] == "submitted" or (project["status"] == "bidding" and user["user_type"] == "client"):
+	   if project["status"] == "active" or project["status"] == "submitted" or project["status"] == "bidding":
 		   return True
 	   else:
 		   return False
