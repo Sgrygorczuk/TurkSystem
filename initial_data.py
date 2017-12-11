@@ -90,6 +90,13 @@ now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 dt_now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
 dt_later = dt_now + timedelta(days=1)
 later = dt_later.strftime("%Y-%m-%d %H:%M:%S")
+resume_dev = ('''Self inspired developer that is trying to make the world a 
+better place by contributing to the team and to the product
+nearest you!!!''')
+resume_client = ('''Self inspired client that is trying to make the world a 
+better place by creating many projects and initiating some product
+nearest you!!!''')
+
 
 def n_days(n = 1, time = None):
 	if time:
@@ -139,39 +146,14 @@ def run(reset = 0):
 	jsonIO.create_DB("project_db")
 	jsonIO.create_DB("bid_db")
 	jsonIO.create_DB("issue_db")
-	
-	resume = ('''Text messaging, or texting, is the act of composing and sending electronic messages, 
-typically consisting of alphabetic and numeric characters, between two or more users of mobile phones,
-tablets, desktops/laptops, or other devices. Text messages may be sent over a cellular network, 
-or may also be sent via an Internet connection.
-\n The term originally referred to messages sent using the Short
-Message Service (SMS). It has grown beyond alphanumeric text to 
-include multimedia messages (known as MMS) containing digital images,
-videos, and sound content, as well as ideograms known as emoji
-(happy faces ,sad faces ,and other icons).\ n As of 2017,
-text messages are used by youth and adults for personal,
-family and social purposes and in business. Governmental
-and non-governmental organizations use text messaging for
-communication between colleagues. As with emailing, in the 2010s,
-the sending of short informal messages has become an accepted part of many cultures.
-[1] This makes texting a quick and easy way to communicate with friends and colleagues,
-including in contexts where a call would be impolite or inappropriate (e.g., calling very 
-late at night or when one knows the other person is busy with family or work activities). 
-Like e-mail and voice mail, and unlike calls (in which the caller hopes to speak directly with the recipient),
-texting does not require the caller and recipient to both be free at the same moment; this permits communication
-even between busy individuals. Text messages can also be used to interact with automated systems, for example, to 
-order products or services from e-commerce websites, or to participate in online contests. Advertisers and service
-providers use direct text marketing to send messages to mobile users about promotions, payment due dates,
-and other notifications instead of using postal mail, email, or voicemail.''')
-
 
 	#create new users
 	super_user.new_user(name = "System Admin", username = "admin", password = "pass", user_type = "SU",  balance = 100)
 	
-	user1.new_user(name = "Sebastian", username = "u1", password = "u1", user_type = "dev", balance = 100, resume = resume, interests = ["data", "statistics", "AI", "computer"], status = "active")
-	user2.new_user(name = "Ronny", username = "u2", password = 'u2', user_type = "dev", balance = 100,  interests = get_rand_interest(), status = "active")
-	user3.new_user(name = "David", username = "u3", password = 'u3', user_type = "dev", balance = 100, interests = get_rand_interest(), status = "active")
-	user4.new_user(name = "Eun Jung", username = "u4", password = 'u4', user_type = "dev", balance = 100, interests = get_rand_interest(), status = "active")
+	user1.new_user(name = "Sebastian", username = "u1", password = "u1", user_type = "dev", balance = 100, resume = resume_dev, interests = ["data", "statistics", "AI", "computer"], status = "active")
+	user2.new_user(name = "Ronny", username = "u2", password = 'u2', user_type = "dev", balance = 100, resume = resume_dev,  interests = get_rand_interest(), status = "active")
+	user3.new_user(name = "David", username = "u3", password = 'u3', user_type = "dev", balance = 100, resume = resume_dev, interests = get_rand_interest(), status = "active")
+	user4.new_user(name = "Eun Jung", username = "u4", password = 'u4', user_type = "dev", balance = 100, resume = resume_dev, interests = get_rand_interest(), status = "active")
 	
 	#generate generic users, <<<user 28,29, and 30 are developers with no team (this is set from below)>>>
 	generate_new_user(5, 49, "dev")
@@ -181,8 +163,8 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	#CREATING CLIENT
 	#################################################################################################################
 	#clients are from 50-70
-	client0.new_user(name = "Wei", username = "Wei", password = "Wei", user_type = "client", balance = 100000000, interests = ["engineering", "projects", "AI", "optimization"], pic ="wei.jpg", status = "active")
-	client1.new_user(name = "isatou", username = "isatou", password = "isatou", user_type = "client", balance = 1000000, interests = ["data", "news", "music", "AI", "stocks"], pic ="isatou.jpg", status = "active")
+	client0.new_user(name = "Wei", username = "c0", password = "c0", user_type = "client", balance = 100000000, resume = resume_client, interests = ["engineering", "projects", "AI", "optimization"], pic ="wei.png", status = "active")
+	client1.new_user(name = "isatou", username = "c1", password = "c1", user_type = "client", balance = 1000000, resume = resume_client, interests = ["data", "news", "music", "AI", "stocks"], pic ="isatou.png", status = "active")
 	generate_new_user(52, 70, "client")
 	reload_users()
 	#################################################################################################################
@@ -218,8 +200,8 @@ and other notifications instead of using postal mail, email, or voicemail.''')
 	user7.set_team_id(3)
 	user17.set_team_id(3)
 	team4.new_team(admin_ids = [8], dev_ids = [8,18], name = "Sad life") #active
-	user4.set_team_id(4)
-	user4.set_team_id(4)
+	user8.set_team_id(4)
+	user18.set_team_id(4)
 	team5.new_team(admin_ids = [9], dev_ids = [9,19], name = "Rainbow Darkness") #active
 	user9.set_team_id(5)
 	user19.set_team_id(5)
@@ -390,12 +372,14 @@ def generate_new_user(initial, end, user_type):
 		if user_type == "dev":
 			cred = "u" + str(count)
 			name = cred
+			resume = resume_dev
 		elif user_type == "client":
 			cred = "c" + str(count-50)
 			name = str(count) + "." + cred
+			resume = resume_client
 		jsonIO.add_row("user_db",{"id":count, "name":name, "username":cred, "password":cred,
 			"user_type": user_type, "balance":balance, "status":"active", "warning":0,
-			"resume":"", "pic":"default_user.png", "interests":get_rand_interest(), "issue_ids":[],
+			"resume":resume, "pic":"default_user.png", "interests":get_rand_interest(), "issue_ids":[],
 			"team_id":'Nan', "project_ids":[]})
 	
 def add_project_to_team(team_id, project_ids):

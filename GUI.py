@@ -114,7 +114,7 @@ class GUI():
         if "user_type" in user:
             image = PhotoImage(file = ez.get_pic(user['id'], user["user_type"]))
         else:
-            image = PhotoImage(file = ez.get_pic(user['id'], "user"))
+            image = PhotoImage(file = ez.get_pic(user['id'], "team"))
         image = image.subsample(12,12)
         label_image = Label(self.frame_logged_in, image = image, cursor = "hand2")
         label_image.image = image
@@ -180,7 +180,7 @@ class GUI():
         if "user_type" in dictonary:
             image = PhotoImage(file = ez.get_pic(dictonary['id'], dictonary["user_type"]))
         else:
-            image = PhotoImage(file = ez.get_pic(dictonary['id'], "user"))
+            image = PhotoImage(file = ez.get_pic(dictonary['id'], "team"))
         image = image.subsample(5,5)
         lable_image = Label(frame_temp, image = image, cursor = "hand2")
         lable_image.image = image
@@ -1141,7 +1141,7 @@ class GUI():
         if "user_type" in profile:
             image = PhotoImage(file = ez.get_pic(profile['id'], profile["user_type"]))
         else:
-            image = PhotoImage(file = ez.get_pic(profile['id'], "user"))
+            image = PhotoImage(file = ez.get_pic(profile['id'], "team"))
         image = image.subsample(4,4)
         label_image = Label(frame_image, image = image)
         label_image.image = image
