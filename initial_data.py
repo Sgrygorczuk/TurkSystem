@@ -387,7 +387,7 @@ def generate_new_user(initial, end, user_type):
 		balance = randint(100,500)
 		cred = ""
 		name = ""
-		if user_type == "user":
+		if user_type == "dev":
 			cred = "u" + str(count)
 			name = cred
 		elif user_type == "client":
